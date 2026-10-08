@@ -1,0 +1,6 @@
+{
+  "name": "ToolBox",
+  "description": "All Your Everyday Tools, In One Place. Calculators, converters, QR scanner, text tools, everyday notes & tasks, Bangladesh utilities, and document tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
