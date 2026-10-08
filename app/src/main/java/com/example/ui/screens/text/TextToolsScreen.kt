@@ -36,6 +36,13 @@ import com.example.ui.theme.DarkSurfaceElevated
 import com.example.ui.theme.RedAccent
 import java.util.Locale
 
+private val REGEX_WHITESPACE = Regex("\\s+")
+private val REGEX_SPACES_TABS = Regex("[ \\t]+")
+private val REGEX_CAMEL_SPLIT = Regex("\\s+|_|-")
+private val REGEX_HTML_TAGS = Regex("<[^>]*>")
+private val REGEX_DIGITS = Regex("[0-9]")
+private val REGEX_PUNCTUATION = Regex("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~]")
+
 @Composable
 fun TextToolsScreen(
     initialToolId: String,
@@ -112,18 +119,21 @@ fun TextToolsScreen(
 
             when (activeTool) {
                 "text_counter" -> {
-                    val charCount = inputText.length
-                    val charNoSpace = inputText.replace("\\s+".toRegex(), "").length
-                    val words = if (inputText.isBlank()) 0 else inputText.trim().split("\\s+".toRegex()).size
-                    val lines = if (inputText.isBlank()) 0 else inputText.lines().size
-                    val readingTimeSec = Math.ceil((words / 200.0) * 60).toInt()
+                    val stats = remember(inputText) {
+                        val charCount = inputText.length
+                        val charNoSpace = inputText.replace(REGEX_WHITESPACE, "").length
+                        val words = if (inputText.isBlank()) 0 else inputText.trim().split(REGEX_WHITESPACE).size
+                        val lines = if (inputText.isBlank()) 0 else inputText.lines().size
+                        val readingTimeSec = Math.ceil((words / 200.0) * 60).toInt()
+                        Triple(words, charCount, "$charNoSpace\n$lines\n~$readingTimeSec")
+                    }
 
                     ToolResultCard(
-                        resultValue = "$words words | $charCount chars",
+                        resultValue = "${stats.first} words | ${stats.second} chars",
                         title = if (isBn) "গণনার পরিসংখ্যান" else "Text Statistics",
-                        subtitle = "${if (isBn) "স্পেস ছাড়া বর্ণ" else "Chars (no space)"}: $charNoSpace\n" +
-                                "${if (isBn) "মোট লাইন" else "Lines"}: $lines\n" +
-                                "${if (isBn) "পড়ার সময়" else "Est. Reading time"}: ~$readingTimeSec sec"
+                        subtitle = "${if (isBn) "স্পেস ছাড়া বর্ণ" else "Chars (no space)"}: ${stats.third.split("\n")[0]}\n" +
+                                "${if (isBn) "মোট লাইন" else "Lines"}: ${stats.third.split("\n")[1]}\n" +
+                                "${if (isBn) "পড়ার সময়" else "Est. Reading time"}: ${stats.third.split("\n")[2]} sec"
                     )
                 }
 
@@ -138,13 +148,13 @@ fun TextToolsScreen(
                                     word.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
                                 }
                                 "camelCase" -> {
-                                    val parts = inputText.split("\\s+|_|-".toRegex()).filter { it.isNotBlank() }
+                                    val parts = inputText.split(REGEX_CAMEL_SPLIT).filter { it.isNotBlank() }
                                     if (parts.isEmpty()) ""
                                     else parts.first().lowercase() + parts.drop(1).joinToString("") { p ->
                                         p.lowercase().replaceFirstChar { it.uppercase() }
                                     }
                                 }
-                                "snake_case" -> inputText.trim().lowercase().replace("\\s+".toRegex(), "_")
+                                "snake_case" -> inputText.trim().lowercase().replace(REGEX_WHITESPACE, "_")
                                 else -> inputText
                             }
                         }
@@ -170,7 +180,7 @@ fun TextToolsScreen(
                 }
 
                 "remove_spaces" -> {
-                    val trimmed = inputText.trim().replace("[ \\t]+".toRegex(), " ")
+                    val trimmed = remember(inputText) { inputText.trim().replace(REGEX_SPACES_TABS, " ") }
                     ToolResultCard(
                         resultValue = trimmed,
                         title = if (isBn) "অতিরিক্ত স্পেস ছাড়া টেক্সট" else "Cleaned Spacing"
@@ -178,11 +188,12 @@ fun TextToolsScreen(
                 }
 
                 "remove_duplicates" -> {
-                    val uniqueLines = inputText.lines().distinct().joinToString("\n")
+                    val uniqueLines = remember(inputText) { inputText.lines().distinct().joinToString("\n") }
+                    val diff = remember(inputText, uniqueLines) { inputText.lines().size - uniqueLines.lines().size }
                     ToolResultCard(
                         resultValue = uniqueLines,
                         title = if (isBn) "ইউনিক লাইনসমূহ" else "Deduplicated Lines",
-                        subtitle = "Removed ${inputText.lines().size - uniqueLines.lines().size} duplicate lines"
+                        subtitle = "Removed $diff duplicate lines"
                     )
                 }
 
@@ -217,11 +228,13 @@ fun TextToolsScreen(
                 }
 
                 "text_cleaner" -> {
-                    val stripped = inputText
-                        .replace("<[^>]*>".toRegex(), "") // Strip HTML
-                        .replace("[0-9]".toRegex(), "") // Strip numbers
-                        .replace("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~]".toRegex(), "") // Strip punctuation
-                        .trim()
+                    val stripped = remember(inputText) {
+                        inputText
+                            .replace(REGEX_HTML_TAGS, "")
+                            .replace(REGEX_DIGITS, "")
+                            .replace(REGEX_PUNCTUATION, "")
+                            .trim()
+                    }
 
                     ToolResultCard(
                         resultValue = stripped,

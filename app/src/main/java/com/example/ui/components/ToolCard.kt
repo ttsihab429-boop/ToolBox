@@ -1,9 +1,8 @@
 package com.example.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,11 +54,12 @@ fun ToolCard(
 ) {
     val heartScale by animateFloatAsState(
         targetValue = if (isFavorite) 1.15f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        animationSpec = tween(durationMillis = 180),
         label = "heart_scale"
     )
     val heartColor by animateColorAsState(
         targetValue = if (isFavorite) RedAccent else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 180),
         label = "heart_color"
     )
 

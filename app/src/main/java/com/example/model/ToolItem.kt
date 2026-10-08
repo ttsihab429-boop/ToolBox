@@ -6,8 +6,12 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Checklist
@@ -24,13 +28,16 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Money
+import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Pin
 import androidx.compose.material.icons.filled.PriceCheck
@@ -41,8 +48,11 @@ import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Thermostat
@@ -52,20 +62,31 @@ import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.localization.AppLanguage
 
 enum class ToolCategory(val id: String) {
-    CALCULATORS("calculators"),
+    QUICK_SCAN("quick_scan"),
+    DEVICE_TOOLS("device_tools"),
+    HARDWARE_CHECKUP("hardware_checkup"),
+    NETWORK_TOOLS("network_tools"),
+    PRIVACY_CENTER("privacy_center"),
+    APP_INSPECTOR("app_inspector"),
+    PERFORMANCE_MONITOR("performance_monitor"),
+    WIFI_QR_TOOLS("wifi_qr_tools"),
     UNIT_CONVERTER("unit_converter"),
     DATE_TIME("date_time"),
     QR_SCANNER("qr_scanner"),
     TEXT_TOOLS("text_tools"),
     EVERYDAY_TOOLS("everyday_tools"),
     BANGLADESH_TOOLS("bangladesh_tools"),
-    FILE_TOOLS("file_tools")
+    FILE_TOOLS("file_tools"),
+    CALCULATORS("calculators")
 }
 
+@Immutable
 data class ToolItem(
     val id: String,
     val category: ToolCategory,
@@ -86,133 +107,162 @@ data class ToolItem(
 
 object ToolRegistry {
     val allTools: List<ToolItem> = listOf(
-        // CATEGORY 1: CALCULATORS
+        // CATEGORY 1: QUICK SCAN
         ToolItem(
-            id = "basic_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.Functions,
-            titleEn = "Basic Calculator",
-            titleBn = "সাধারণ ক্যালকুলেটর",
-            descEn = "Everyday arithmetic with history and brackets",
-            descBn = "বন্ধন ও ইতিহাসসহ দৈনন্দিন হিসাব",
+            id = "quick_scan",
+            category = ToolCategory.QUICK_SCAN,
+            icon = Icons.Default.Bolt,
+            titleEn = "Quick Scan & Phone Health",
+            titleBn = "কুইক ফোন স্ক্যান ও হেলথ",
+            descEn = "One-tap diagnostic for battery, RAM, storage, network, and hardware",
+            descBn = "এক ট্যাপে ব্যাটারি, র্যাম, মেমোরি, নেটওয়ার্ক ও সেন্সর স্বাস্থ্য পরীক্ষা",
             isPopular = true,
-            keywords = listOf("math", "add", "sub", "multiply", "divide", "hishab")
-        ),
-        ToolItem(
-            id = "sci_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.Science,
-            titleEn = "Scientific Calculator",
-            titleBn = "সাইন্টিফিক ক্যালকুলেটর",
-            descEn = "Trigonometry, logarithms, powers, and constants",
-            descBn = "ত্রিকোণমিতি, লগ, ঘাত ও কনস্ট্যান্ট",
-            isPopular = true,
-            keywords = listOf("sin", "cos", "tan", "log", "sqrt", "power", "pi")
-        ),
-        ToolItem(
-            id = "pct_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.Percent,
-            titleEn = "Percentage Calculator",
-            titleBn = "শতকরা ক্যালকুলেটর",
-            descEn = "Find percentage, ratio, increase, and decrease",
-            descBn = "শতকরা হার, অনুপাত ও বৃদ্ধি/হ্রাস নির্ণয়",
-            isPopular = true,
-            keywords = listOf("percent", "portion", "shokora")
-        ),
-        ToolItem(
-            id = "discount_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.PriceCheck,
-            titleEn = "Discount Calculator",
-            titleBn = "ছাড় / ডিসকাউন্ট",
-            descEn = "Calculate savings, final price, and coupon rates",
-            descBn = "ছাড়ের পর চূড়ান্ত মূল্য ও মোট সাশ্রয়",
-            keywords = listOf("sale", "coupon", "offer", "discount")
-        ),
-        ToolItem(
-            id = "profit_loss_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.TrendingUp,
-            titleEn = "Profit & Loss Calculator",
-            titleBn = "লাভ ও ক্ষতি",
-            descEn = "Analyze margin, markup, and net profit percentage",
-            descBn = "ব্যবসার লাভ-ক্ষতির পরিমাণ ও শতকরা হার",
-            keywords = listOf("business", "margin", "markup", "cost")
-        ),
-        ToolItem(
-            id = "avg_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.Assessment,
-            titleEn = "Average Calculator",
-            titleBn = "গড় ক্যালকুলেটর",
-            descEn = "Mean, median, minimum, maximum, and sum",
-            descBn = "গড়, মধ্যক, মোট যোগফল ও রেঞ্জ",
-            keywords = listOf("mean", "median", "statistics", "gor")
-        ),
-        ToolItem(
-            id = "fraction_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.Tune,
-            titleEn = "Fraction Calculator",
-            titleBn = "ভগ্নাংশ ক্যালকুলেটর",
-            descEn = "Add, subtract, multiply fractions with step simplification",
-            descBn = "ভগ্নাংশের যোগ, বিয়োগ ও সরলীকরণ",
-            keywords = listOf("fraction", "numerator", "denominator")
-        ),
-        ToolItem(
-            id = "ratio_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.AutoMirrored.Filled.CompareArrows,
-            titleEn = "Ratio Calculator",
-            titleBn = "অনুপাত ক্যালকুলেটর",
-            descEn = "Solve A:B = C:D proportions and simplify ratios",
-            descBn = "অনুপাত সমাধান ও সরল রূপ",
-            keywords = listOf("ratio", "proportion", "scale")
-        ),
-        ToolItem(
-            id = "gst_vat_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.ReceiptLong,
-            titleEn = "GST / VAT Calculator",
-            titleBn = "ভ্যাট / ট্যাক্স",
-            descEn = "Add or reverse VAT/tax amount with custom rates",
-            descBn = "ভ্যাট যুক্ত অথবা পৃথক করার হিসাব",
-            keywords = listOf("vat", "tax", "gst", "revenue")
-        ),
-        ToolItem(
-            id = "tip_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.CreditCard,
-            titleEn = "Tip & Bill Split",
-            titleBn = "টিপ ও বিল ভাগ",
-            descEn = "Calculate tip percentage and split bills among friends",
-            descBn = "টিপ হিসাব ও বন্ধুদের মাঝে বিল ভাগাভাগি",
-            keywords = listOf("tip", "bill", "split", "restaurant")
-        ),
-        ToolItem(
-            id = "age_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.CalendarToday,
-            titleEn = "Age Calculator",
-            titleBn = "বয়স ক্যালকুলেটর",
-            descEn = "Exact years, months, days, and next birthday countdown",
-            descBn = "বছর, মাস ও দিনে সঠিক বয়স এবং পরবর্তী জন্মদিন",
-            isPopular = true,
-            keywords = listOf("birthday", "years", "dob", "boyos")
-        ),
-        ToolItem(
-            id = "date_diff_calc",
-            category = ToolCategory.CALCULATORS,
-            icon = Icons.Default.DateRange,
-            titleEn = "Date Difference",
-            titleBn = "তারিখের ব্যবধান",
-            descEn = "Count exact days, weeks, and months between two dates",
-            descBn = "দুইটি তারিখের মধ্যবর্তী দিন ও সময়ের হিসাব",
-            keywords = listOf("duration", "between", "calendar")
+            keywords = listOf("scan", "diagnostic", "health", "check", "phone")
         ),
 
-        // CATEGORY 2: UNIT CONVERTER
+        // CATEGORY 2: DEVICE TOOLS
+        ToolItem(
+            id = "device_info",
+            category = ToolCategory.DEVICE_TOOLS,
+            icon = Icons.Default.PhoneAndroid,
+            titleEn = "Device & System Specs",
+            titleBn = "ডিভাইস ও সিস্টেম তথ্য",
+            descEn = "Model, manufacturer, Android OS version, display, and CPU",
+            descBn = "মডেল, প্রস্তুতকারক, অ্যান্ড্রয়েড ভার্সন, স্ক্রিন ও প্রসেসর",
+            isPopular = true,
+            keywords = listOf("specs", "model", "android", "cpu", "hardware", "system")
+        ),
+        ToolItem(
+            id = "battery_info",
+            category = ToolCategory.DEVICE_TOOLS,
+            icon = Icons.Default.BatteryChargingFull,
+            titleEn = "Battery Health & Specs",
+            titleBn = "ব্যাটারি স্বাস্থ্য ও তথ্য",
+            descEn = "Real-time battery level, health, voltage, temperature, and technology",
+            descBn = "ব্যাটারি লেভেল, চার্জের অবস্থা, ভোল্টেজ, তাপমাত্রা ও স্থায়িত্ব",
+            isPopular = true,
+            keywords = listOf("battery", "charging", "health", "temperature", "voltage")
+        ),
+        ToolItem(
+            id = "storage_info",
+            category = ToolCategory.DEVICE_TOOLS,
+            icon = Icons.Default.Storage,
+            titleEn = "Storage Details",
+            titleBn = "স্টোরেজ বিবরণী",
+            descEn = "Detailed internal storage, free space, and system partition breakdown",
+            descBn = "ইন্টারনাল মেমোরি, ব্যবহৃত জায়গা ও খালি স্পেস",
+            keywords = listOf("storage", "space", "disk", "memory", "rom")
+        ),
+        ToolItem(
+            id = "sensors_list",
+            category = ToolCategory.DEVICE_TOOLS,
+            icon = Icons.Default.Sensors,
+            titleEn = "Hardware Sensors List",
+            titleBn = "অনবোর্ড সেন্সর তালিকা",
+            descEn = "Explore all physical hardware sensors available on your device",
+            descBn = "ফোনে উপস্থিত সব ফিজিক্যাল সেন্সর ও তাদের ক্ষমতা",
+            keywords = listOf("sensor", "gyro", "accelerometer", "hardware")
+        ),
+
+        // CATEGORY 3: HARDWARE CHECKUP
+        ToolItem(
+            id = "hardware_checkup",
+            category = ToolCategory.HARDWARE_CHECKUP,
+            icon = Icons.Default.Build,
+            titleEn = "Hardware Test Center",
+            titleBn = "হার্ডওয়্যার টেস্ট সেন্টার",
+            descEn = "Real interactive tests for Touch, Display, Speaker, Mic, Vibration, Flashlight, Sensors",
+            descBn = "টাচ, ডিসপ্লে, স্পিকার, মাইক, ভাইব্রেশন ও সেন্সরের আসল পরীক্ষা",
+            isPopular = true,
+            keywords = listOf("test", "hardware", "screen", "mic", "speaker", "vibrate", "touch")
+        ),
+
+        // CATEGORY 4: NETWORK TOOLS
+        ToolItem(
+            id = "network_status",
+            category = ToolCategory.NETWORK_TOOLS,
+            icon = Icons.Default.Wifi,
+            titleEn = "Network Info & IP",
+            titleBn = "নেটওয়ার্ক তথ্য ও আইপি",
+            descEn = "Wi-Fi / Cellular connection state, IPv4, IPv6, and network adapters",
+            descBn = "ওয়াইফাই ও মোবাইল ডাটা কানেকশন, লোকাল ও পাবলিক আইপি",
+            isPopular = true,
+            keywords = listOf("network", "ip", "wifi", "cellular", "internet")
+        ),
+        ToolItem(
+            id = "ping_test",
+            category = ToolCategory.NETWORK_TOOLS,
+            icon = Icons.Default.NetworkCheck,
+            titleEn = "Ping & Connectivity Test",
+            titleBn = "পিং ও ইন্টারনেট টেস্ট",
+            descEn = "Test real latency and packet response time to DNS servers",
+            descBn = "সার্ভারের সাথে রিয়েল রেসপন্স টাইম ও পিং পরিমাপ",
+            keywords = listOf("ping", "latency", "dns", "speed", "ms")
+        ),
+        ToolItem(
+            id = "network_doctor",
+            category = ToolCategory.NETWORK_TOOLS,
+            icon = Icons.Default.HealthAndSafety,
+            titleEn = "Network Doctor",
+            titleBn = "নেটওয়ার্ক ডাক্তার",
+            descEn = "Diagnose connection issues, DNS reachability, and signal stability",
+            descBn = "ইন্টারনেট ও ওয়াইফাই সংযোগ সমস্যার স্বয়ংক্রিয় সমাধান পরামর্শ",
+            keywords = listOf("doctor", "troubleshoot", "fix", "dns", "captive")
+        ),
+
+        // CATEGORY 5: PRIVACY CENTER
+        ToolItem(
+            id = "privacy_center",
+            category = ToolCategory.PRIVACY_CENTER,
+            icon = Icons.Default.Security,
+            titleEn = "Privacy & Permissions Audit",
+            titleBn = "প্রাইভেসি ও পারমিশন নিরীক্ষা",
+            descEn = "Overview of sensitive permissions: Camera, Mic, Location, Notifications",
+            descBn = "ক্যামেরা, মাইক্রোফোন ও লোকেশন পারমিশনের স্বচ্ছ পর্যালোচনা",
+            isPopular = true,
+            keywords = listOf("privacy", "permission", "security", "camera", "mic")
+        ),
+
+        // CATEGORY 6: APP INSPECTOR
+        ToolItem(
+            id = "app_inspector",
+            category = ToolCategory.APP_INSPECTOR,
+            icon = Icons.Default.Apps,
+            titleEn = "Installed App Inspector",
+            titleBn = "ইনস্টল করা অ্যাপ বিশ্লেষক",
+            descEn = "Inspect package names, versions, APK sizes, and requested permissions",
+            descBn = "অ্যাপের সঠিক ভার্সন, সাইজ ও পারমিশন তালিকা",
+            isPopular = true,
+            keywords = listOf("apps", "package", "apk", "permissions", "installed")
+        ),
+
+        // CATEGORY 7: PERFORMANCE MONITOR
+        ToolItem(
+            id = "perf_monitor",
+            category = ToolCategory.PERFORMANCE_MONITOR,
+            icon = Icons.Default.Speed,
+            titleEn = "Real-Time Performance Monitor",
+            titleBn = "রিয়েল-টাইম পারফরম্যান্স মনিটর",
+            descEn = "Live RAM usage, storage breakdown, real battery temperature, and uptime",
+            descBn = "লাইভ র্যাম ব্যবহার, স্টোরেজ, আসল তাপমাত্রা ও ফোন আপটাইম",
+            isPopular = true,
+            keywords = listOf("ram", "performance", "cpu", "usage", "uptime", "monitor")
+        ),
+
+        // CATEGORY 8: WI-FI QR TOOLS
+        ToolItem(
+            id = "wifi_qr",
+            category = ToolCategory.WIFI_QR_TOOLS,
+            icon = Icons.Default.QrCode,
+            titleEn = "Wi-Fi QR Tools",
+            titleBn = "ওয়াইফাই কিউআর টুলস",
+            descEn = "Generate scannable Wi-Fi sharing cards & scan Wi-Fi connection codes",
+            descBn = "পাসওয়ার্ড শেয়ারের কিউআর তৈরি ও ওয়াইফাই কোড স্ক্যান",
+            isPopular = true,
+            keywords = listOf("wifi", "qr", "password", "share", "connect")
+        ),
+
+        // CATEGORY 9: UNIT CONVERTER
         ToolItem(
             id = "unit_length",
             category = ToolCategory.UNIT_CONVERTER,
@@ -679,6 +729,132 @@ object ToolRegistry {
             descEn = "Inspect size, MIME type, modified time, and path of any file",
             descBn = "যেকোনো ফাইলের সঠিক সাইজ, এক্সটেনশন ও বিবরণী",
             keywords = listOf("details", "mime", "size", "bytes")
+        ),
+
+        // CATEGORY 16: CALCULATORS (AT THE BOTTOM OF THE LIST)
+        ToolItem(
+            id = "basic_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.Functions,
+            titleEn = "Basic Calculator",
+            titleBn = "সাধারণ ক্যালকুলেটর",
+            descEn = "Everyday arithmetic with history and brackets",
+            descBn = "বন্ধন ও ইতিহাসসহ দৈনন্দিন হিসাব",
+            isPopular = true,
+            keywords = listOf("math", "add", "sub", "multiply", "divide", "hishab")
+        ),
+        ToolItem(
+            id = "sci_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.Science,
+            titleEn = "Scientific Calculator",
+            titleBn = "সাইন্টিফিক ক্যালকুলেটর",
+            descEn = "Trigonometry, logarithms, powers, and constants",
+            descBn = "ত্রিকোণমিতি, লগ, ঘাত ও কনস্ট্যান্ট",
+            isPopular = true,
+            keywords = listOf("sin", "cos", "tan", "log", "sqrt", "power", "pi")
+        ),
+        ToolItem(
+            id = "pct_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.Percent,
+            titleEn = "Percentage Calculator",
+            titleBn = "শতকরা ক্যালকুলেটর",
+            descEn = "Find percentage, ratio, increase, and decrease",
+            descBn = "শতকরা হার, অনুপাত ও বৃদ্ধি/হ্রাস নির্ণয়",
+            isPopular = true,
+            keywords = listOf("percent", "portion", "shokora")
+        ),
+        ToolItem(
+            id = "discount_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.PriceCheck,
+            titleEn = "Discount Calculator",
+            titleBn = "ছাড় / ডিসকাউন্ট",
+            descEn = "Calculate savings, final price, and coupon rates",
+            descBn = "ছাড়ের পর চূড়ান্ত মূল্য ও মোট সাশ্রয়",
+            keywords = listOf("sale", "coupon", "offer", "discount")
+        ),
+        ToolItem(
+            id = "profit_loss_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.TrendingUp,
+            titleEn = "Profit & Loss Calculator",
+            titleBn = "লাভ ও ক্ষতি",
+            descEn = "Analyze margin, markup, and net profit percentage",
+            descBn = "ব্যবসার লাভ-ক্ষতির পরিমাণ ও শতকরা হার",
+            keywords = listOf("business", "margin", "markup", "cost")
+        ),
+        ToolItem(
+            id = "avg_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.Assessment,
+            titleEn = "Average Calculator",
+            titleBn = "গড় ক্যালকুলেটর",
+            descEn = "Mean, median, minimum, maximum, and sum",
+            descBn = "গড়, মধ্যক, মোট যোগফল ও রেঞ্জ",
+            keywords = listOf("mean", "median", "statistics", "gor")
+        ),
+        ToolItem(
+            id = "fraction_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.Tune,
+            titleEn = "Fraction Calculator",
+            titleBn = "ভগ্নাংশ ক্যালকুলেটর",
+            descEn = "Add, subtract, multiply fractions with step simplification",
+            descBn = "ভগ্নাংশের যোগ, বিয়োগ ও সরলীকরণ",
+            keywords = listOf("fraction", "numerator", "denominator")
+        ),
+        ToolItem(
+            id = "ratio_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.AutoMirrored.Filled.CompareArrows,
+            titleEn = "Ratio Calculator",
+            titleBn = "অনুপাত ক্যালকুলেটর",
+            descEn = "Solve A:B = C:D proportions and simplify ratios",
+            descBn = "অনুপাত সমাধান ও সরল রূপ",
+            keywords = listOf("ratio", "proportion", "scale")
+        ),
+        ToolItem(
+            id = "gst_vat_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.ReceiptLong,
+            titleEn = "GST / VAT Calculator",
+            titleBn = "ভ্যাট / ট্যাক্স",
+            descEn = "Add or reverse VAT/tax amount with custom rates",
+            descBn = "ভ্যাট যুক্ত অথবা পৃথক করার হিসাব",
+            keywords = listOf("vat", "tax", "gst", "revenue")
+        ),
+        ToolItem(
+            id = "tip_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.CreditCard,
+            titleEn = "Tip & Bill Split",
+            titleBn = "টিপ ও বিল ভাগ",
+            descEn = "Calculate tip percentage and split bills among friends",
+            descBn = "টিপ হিসাব ও বন্ধুদের মাঝে বিল ভাগাভাগি",
+            keywords = listOf("tip", "bill", "split", "restaurant")
+        ),
+        ToolItem(
+            id = "age_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.CalendarToday,
+            titleEn = "Age Calculator",
+            titleBn = "বয়স ক্যালকুলেটর",
+            descEn = "Exact years, months, days, and next birthday countdown",
+            descBn = "বছর, মাস ও দিনে সঠিক বয়স এবং পরবর্তী জন্মদিন",
+            isPopular = true,
+            keywords = listOf("birthday", "years", "dob", "boyos")
+        ),
+        ToolItem(
+            id = "date_diff_calc",
+            category = ToolCategory.CALCULATORS,
+            icon = Icons.Default.DateRange,
+            titleEn = "Date Difference",
+            titleBn = "তারিখের ব্যবধান",
+            descEn = "Count exact days, weeks, and months between two dates",
+            descBn = "দুইটি তারিখের মধ্যবর্তী দিন ও সময়ের হিসাব",
+            keywords = listOf("duration", "between", "calendar")
         )
     )
 

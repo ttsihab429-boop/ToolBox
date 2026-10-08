@@ -75,7 +75,7 @@ fun ShoppingListScreen(
     var itemUnit by remember { mutableStateOf("pcs") }
     var itemPrice by remember { mutableStateOf("") }
 
-    val totalCost = items.sumOf { it.quantity * it.estimatedPrice }
+    val totalCost = remember(items) { items.sumOf { it.quantity * it.estimatedPrice } }
 
     Scaffold(
         topBar = {

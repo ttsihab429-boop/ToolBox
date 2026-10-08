@@ -245,19 +245,21 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                val categories = listOf(
-                    ToolCategory.CALCULATORS to Strings.catCalculators(language),
-                    ToolCategory.UNIT_CONVERTER to Strings.catConverters(language),
-                    ToolCategory.DATE_TIME to Strings.catDateTime(language),
-                    ToolCategory.QR_SCANNER to Strings.catQrScanner(language),
-                    ToolCategory.TEXT_TOOLS to Strings.catTextTools(language),
-                    ToolCategory.EVERYDAY_TOOLS to Strings.catEveryday(language),
-                    ToolCategory.BANGLADESH_TOOLS to Strings.catBangladesh(language),
-                    ToolCategory.FILE_TOOLS to Strings.catFiles(language)
-                )
+                val categories = remember(language) {
+                    listOf(
+                        ToolCategory.CALCULATORS to Strings.catCalculators(language),
+                        ToolCategory.UNIT_CONVERTER to Strings.catConverters(language),
+                        ToolCategory.DATE_TIME to Strings.catDateTime(language),
+                        ToolCategory.QR_SCANNER to Strings.catQrScanner(language),
+                        ToolCategory.TEXT_TOOLS to Strings.catTextTools(language),
+                        ToolCategory.EVERYDAY_TOOLS to Strings.catEveryday(language),
+                        ToolCategory.BANGLADESH_TOOLS to Strings.catBangladesh(language),
+                        ToolCategory.FILE_TOOLS to Strings.catFiles(language)
+                    )
+                }
 
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(categories) { (cat, title) ->
+                    items(categories, key = { it.first.name }) { (cat, title) ->
                         Surface(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))

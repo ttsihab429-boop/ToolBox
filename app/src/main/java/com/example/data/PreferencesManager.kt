@@ -92,15 +92,17 @@ class PreferencesManager(context: Context) {
 
     fun recordToolUsed(toolId: String) {
         if (!_trackRecents.value) return
-        val current = _recentToolIds.value.toMutableList()
-        current.remove(toolId)
-        current.add(0, toolId)
-        if (current.size > 20) {
-            current.removeAt(current.lastIndex)
+        val current = _recentToolIds.value
+        if (current.firstOrNull() == toolId) return // Already at top, no-op
+        val updated = current.toMutableList()
+        updated.remove(toolId)
+        updated.add(0, toolId)
+        if (updated.size > 20) {
+            updated.removeAt(updated.lastIndex)
         }
-        val serialized = current.joinToString(",")
+        val serialized = updated.joinToString(",")
         prefs.edit().putString(KEY_RECENTS, serialized).apply()
-        _recentToolIds.value = current
+        _recentToolIds.value = updated
     }
 
     fun clearRecents() {

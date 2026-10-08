@@ -130,7 +130,7 @@ fun AllToolsScreen(
                     )
                 )
             }
-            items(ToolCategory.entries) { cat ->
+            items(ToolCategory.entries, key = { it.name }) { cat ->
                 val label = when (cat) {
                     ToolCategory.CALCULATORS -> Strings.catCalculators(language)
                     ToolCategory.UNIT_CONVERTER -> Strings.catConverters(language)

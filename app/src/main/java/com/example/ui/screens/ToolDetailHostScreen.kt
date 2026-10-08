@@ -21,6 +21,15 @@ import com.example.ui.screens.datetime.DateToolsScreen
 import com.example.ui.screens.datetime.StopwatchScreen
 import com.example.ui.screens.datetime.TimerScreen
 import com.example.ui.screens.datetime.WorldClockScreen
+import com.example.ui.screens.diagnostics.AppInspectorScreen
+import com.example.ui.screens.diagnostics.DeviceInfoTab
+import com.example.ui.screens.diagnostics.DeviceToolsScreen
+import com.example.ui.screens.diagnostics.HardwareCheckupScreen
+import com.example.ui.screens.diagnostics.NetworkToolsScreen
+import com.example.ui.screens.diagnostics.PerformanceMonitorScreen
+import com.example.ui.screens.diagnostics.PrivacyCenterScreen
+import com.example.ui.screens.diagnostics.QuickScanScreen
+import com.example.ui.screens.diagnostics.WifiQrScreen
 import com.example.ui.screens.everyday.ChecklistScreen
 import com.example.ui.screens.everyday.ColorPickerScreen
 import com.example.ui.screens.everyday.NotesScreen

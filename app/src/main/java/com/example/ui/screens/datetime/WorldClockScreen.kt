@@ -1,7 +1,5 @@
 package com.example.ui.screens.datetime
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,7 +41,33 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-data class CityClock(val cityEn: String, val cityBn: String, val timeZoneId: String, val country: String)
+data class CityClock(
+    val cityEn: String,
+    val cityBn: String,
+    val timeZoneId: String,
+    val country: String,
+    val timeFormat: SimpleDateFormat,
+    val dateFormat: SimpleDateFormat
+)
+
+private val CITIES_LIST = listOf(
+    createCityClock("Dhaka", "ঢাকা", "Asia/Dhaka", "Bangladesh (GMT+6)"),
+    createCityClock("London", "লন্ডন", "Europe/London", "United Kingdom (GMT+0)"),
+    createCityClock("New York", "নিউইয়র্ক", "America/New_York", "United States (GMT-4)"),
+    createCityClock("Tokyo", "টোকিও", "Asia/Tokyo", "Japan (GMT+9)"),
+    createCityClock("Dubai", "দুবাই", "Asia/Dubai", "UAE (GMT+4)"),
+    createCityClock("Singapore", "সিঙ্গাপুর", "Asia/Singapore", "Singapore (GMT+8)"),
+    createCityClock("Sydney", "সিডনি", "Australia/Sydney", "Australia (GMT+10)"),
+    createCityClock("Los Angeles", "লস অ্যাঞ্জেলেস", "America/Los_Angeles", "United States (GMT-7)"),
+    createCityClock("UTC / GMT", "ইউটিসি", "UTC", "Coordinated Universal Time")
+)
+
+private fun createCityClock(cityEn: String, cityBn: String, tzId: String, country: String): CityClock {
+    val tz = TimeZone.getTimeZone(tzId)
+    val tf = SimpleDateFormat("hh:mm:ss a", Locale.US).apply { timeZone = tz }
+    val df = SimpleDateFormat("EEE, dd MMM yyyy", Locale.US).apply { timeZone = tz }
+    return CityClock(cityEn, cityBn, tzId, country, tf, df)
+}
 
 @Composable
 fun WorldClockScreen(
@@ -53,6 +77,7 @@ fun WorldClockScreen(
 ) {
     val isBn = language == AppLanguage.BANGLA
     var currentTimeMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val reusableDate = remember { Date() }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -60,18 +85,6 @@ fun WorldClockScreen(
             currentTimeMillis = System.currentTimeMillis()
         }
     }
-
-    val cities = listOf(
-        CityClock("Dhaka", "ঢাকা", "Asia/Dhaka", "Bangladesh (GMT+6)"),
-        CityClock("London", "লন্ডন", "Europe/London", "United Kingdom (GMT+0)"),
-        CityClock("New York", "নিউইয়র্ক", "America/New_York", "United States (GMT-4)"),
-        CityClock("Tokyo", "টোকিও", "Asia/Tokyo", "Japan (GMT+9)"),
-        CityClock("Dubai", "দুবাই", "Asia/Dubai", "UAE (GMT+4)"),
-        CityClock("Singapore", "সিঙ্গাপুর", "Asia/Singapore", "Singapore (GMT+8)"),
-        CityClock("Sydney", "সিডনি", "Australia/Sydney", "Australia (GMT+10)"),
-        CityClock("Los Angeles", "লস অ্যাঞ্জেলেস", "America/Los_Angeles", "United States (GMT-7)"),
-        CityClock("UTC / GMT", "ইউটিসি", "UTC", "Coordinated Universal Time")
-    )
 
     Scaffold(
         topBar = {
@@ -91,11 +104,14 @@ fun WorldClockScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(cities) { city ->
-                val tz = TimeZone.getTimeZone(city.timeZoneId)
-                val timeFormat = SimpleDateFormat("hh:mm:ss a", Locale.US).apply { timeZone = tz }
-                val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy", Locale.US).apply { timeZone = tz }
-                val currentDate = Date(currentTimeMillis)
+            items(
+                items = CITIES_LIST,
+                key = { it.timeZoneId },
+                contentType = { "city_card" }
+            ) { city ->
+                reusableDate.time = currentTimeMillis
+                val timeStr = city.timeFormat.format(reusableDate)
+                val dateStr = city.dateFormat.format(reusableDate)
 
                 Surface(
                     modifier = Modifier
@@ -126,14 +142,14 @@ fun WorldClockScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = dateFormat.format(currentDate),
+                                text = dateStr,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = RedAccent
                             )
                         }
 
                         Text(
-                            text = timeFormat.format(currentDate),
+                            text = timeStr,
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.SemiBold,

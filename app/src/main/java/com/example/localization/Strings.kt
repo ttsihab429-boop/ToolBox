@@ -124,6 +124,38 @@ object Strings {
     }
 
     // Categories
+    fun catQuickScan(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Quick Scan"
+        AppLanguage.BANGLA -> "কুইক স্ক্যান"
+    }
+    fun catDeviceTools(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Device Tools"
+        AppLanguage.BANGLA -> "ডিভাইস তথ্য"
+    }
+    fun catHardwareCheckup(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Hardware Checkup"
+        AppLanguage.BANGLA -> "হার্ডওয়্যার পরীক্ষা"
+    }
+    fun catNetworkTools(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Network Tools"
+        AppLanguage.BANGLA -> "নেটওয়ার্ক টুলস"
+    }
+    fun catPrivacyCenter(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Privacy Center"
+        AppLanguage.BANGLA -> "প্রাইভেসি সেন্টার"
+    }
+    fun catAppInspector(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "App Inspector"
+        AppLanguage.BANGLA -> "অ্যাপ বিশ্লেষক"
+    }
+    fun catPerformanceMonitor(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Performance Monitor"
+        AppLanguage.BANGLA -> "পারফরম্যান্স মনিটর"
+    }
+    fun catWifiQr(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Wi-Fi QR Tools"
+        AppLanguage.BANGLA -> "ওয়াইফাই কিউআর"
+    }
     fun catCalculators(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "Calculators"
         AppLanguage.BANGLA -> "ক্যালকুলেটর"

@@ -90,6 +90,8 @@ fun NotesScreen(
         }
     }
 
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()) }
+
     Scaffold(
         topBar = {
             ToolBoxTopBar(
@@ -167,8 +169,7 @@ fun NotesScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(filteredNotes, key = { it.id }) { note ->
-                        val dateStr = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
-                            .format(Date(note.timestamp))
+                        val dateStr = dateFormat.format(Date(note.timestamp))
 
                         Surface(
                             modifier = Modifier

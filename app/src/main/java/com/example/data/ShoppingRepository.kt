@@ -2,13 +2,19 @@ package com.example.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.runtime.Immutable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
+@Immutable
 data class ShoppingItem(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
@@ -22,19 +28,22 @@ data class ShoppingItem(
 class ShoppingRepository(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("toolbox_shopping_storage", Context.MODE_PRIVATE)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _items = MutableStateFlow<List<ShoppingItem>>(emptyList())
     val items: StateFlow<List<ShoppingItem>> = _items.asStateFlow()
 
     init {
-        loadItems()
+        scope.launch(Dispatchers.IO) {
+            loadItems()
+        }
     }
 
     private fun loadItems() {
         val raw = prefs.getString("shopping_json", null) ?: return
         try {
             val array = JSONArray(raw)
-            val list = mutableListOf<ShoppingItem>()
+            val list = ArrayList<ShoppingItem>(array.length())
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
                 list.add(
@@ -56,20 +65,24 @@ class ShoppingRepository(context: Context) {
     }
 
     private fun persist(list: List<ShoppingItem>) {
-        val array = JSONArray()
-        for (item in list) {
-            val obj = JSONObject()
-            obj.put("id", item.id)
-            obj.put("name", item.name)
-            obj.put("quantity", item.quantity)
-            obj.put("unit", item.unit)
-            obj.put("estimatedPrice", item.estimatedPrice)
-            obj.put("isBought", item.isBought)
-            obj.put("timestamp", item.timestamp)
-            array.put(obj)
-        }
-        prefs.edit().putString("shopping_json", array.toString()).apply()
         _items.value = list
+        scope.launch {
+            try {
+                val array = JSONArray()
+                for (item in list) {
+                    val obj = JSONObject()
+                    obj.put("id", item.id)
+                    obj.put("name", item.name)
+                    obj.put("quantity", item.quantity)
+                    obj.put("unit", item.unit)
+                    obj.put("estimatedPrice", item.estimatedPrice)
+                    obj.put("isBought", item.isBought)
+                    obj.put("timestamp", item.timestamp)
+                    array.put(obj)
+                }
+                prefs.edit().putString("shopping_json", array.toString()).apply()
+            } catch (_: Exception) {}
+        }
     }
 
     fun addItem(name: String, quantity: Double, unit: String, price: Double) {
@@ -114,7 +127,9 @@ class ShoppingRepository(context: Context) {
     }
 
     fun clearAll() {
-        prefs.edit().remove("shopping_json").apply()
         _items.value = emptyList()
+        scope.launch {
+            prefs.edit().remove("shopping_json").apply()
+        }
     }
 }

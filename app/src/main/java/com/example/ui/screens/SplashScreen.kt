@@ -28,7 +28,9 @@ import com.example.localization.Strings
 import com.example.ui.components.ToolboxLogo
 import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.RedAccent
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(
@@ -39,15 +41,21 @@ fun SplashScreen(
     val alpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        scale.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing)
-        )
-        alpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 500)
-        )
-        delay(600)
+        coroutineScope {
+            launch {
+                scale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+                )
+            }
+            launch {
+                alpha.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 400)
+                )
+            }
+        }
+        delay(400)
         onFinish()
     }
 

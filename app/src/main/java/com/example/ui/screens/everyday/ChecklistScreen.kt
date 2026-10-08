@@ -180,7 +180,7 @@ fun ChecklistScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                itemsIndexed(currentList) { index, item ->
+                itemsIndexed(currentList, key = { index, item -> "${item.text}_$index" }) { index, item ->
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()

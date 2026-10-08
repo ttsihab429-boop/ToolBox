@@ -77,17 +77,6 @@ fun TimerScreen(
         }
     }
 
-    val progress by animateFloatAsState(
-        targetValue = if (totalSeconds > 0) remainingSeconds.toFloat() / totalSeconds.toFloat() else 0f,
-        label = "timer_progress"
-    )
-
-    fun formatCountdown(sec: Int): String {
-        val m = sec / 60
-        val s = sec % 60
-        return String.format("%02d:%02d", m, s)
-    }
-
     Scaffold(
         topBar = {
             ToolBoxTopBar(
@@ -109,8 +98,9 @@ fun TimerScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Quick Preset Chips
+            val presets = remember { listOf(1, 3, 5, 10, 25) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(1, 3, 5, 10, 25).forEach { mins ->
+                presets.forEach { mins ->
                     FilterChip(
                         selected = totalSeconds == mins * 60,
                         onClick = {
@@ -130,43 +120,12 @@ fun TimerScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // Circular Progress with Countdown
-            Box(
-                modifier = Modifier.size(240.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    progress = { 1f },
-                    modifier = Modifier.fillMaxSize(),
-                    color = DarkSurfaceElevated,
-                    strokeWidth = 10.dp
-                )
-                CircularProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxSize(),
-                    color = RedAccent,
-                    strokeWidth = 10.dp
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = formatCountdown(remainingSeconds),
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 44.sp,
-                            color = Color.White
-                        ),
-                        modifier = Modifier.testTag("timer_countdown_display")
-                    )
-                    if (remainingSeconds == 0) {
-                        Text(
-                            text = if (isBn) "সময় সমাপ্ত!" else "Time's up!",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = RedAccent
-                        )
-                    }
-                }
-            }
+            // Circular Progress with Countdown (isolated scope)
+            TimerCountdownDisplay(
+                remainingSeconds = remainingSeconds,
+                totalSeconds = totalSeconds,
+                isBn = isBn
+            )
 
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -214,6 +173,59 @@ fun TimerScreen(
                         modifier = Modifier.size(36.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimerCountdownDisplay(
+    remainingSeconds: Int,
+    totalSeconds: Int,
+    isBn: Boolean
+) {
+    val progress by animateFloatAsState(
+        targetValue = if (totalSeconds > 0) remainingSeconds.toFloat() / totalSeconds.toFloat() else 0f,
+        label = "timer_progress"
+    )
+
+    val m = remainingSeconds / 60
+    val s = remainingSeconds % 60
+    val timeFormatted = String.format("%02d:%02d", m, s)
+
+    Box(
+        modifier = Modifier.size(240.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            progress = { 1f },
+            modifier = Modifier.fillMaxSize(),
+            color = DarkSurfaceElevated,
+            strokeWidth = 10.dp
+        )
+        CircularProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxSize(),
+            color = RedAccent,
+            strokeWidth = 10.dp
+        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = timeFormatted,
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 44.sp,
+                    color = Color.White
+                ),
+                modifier = Modifier.testTag("timer_countdown_display")
+            )
+            if (remainingSeconds == 0) {
+                Text(
+                    text = if (isBn) "সময় সমাপ্ত!" else "Time's up!",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = RedAccent
+                )
             }
         }
     }

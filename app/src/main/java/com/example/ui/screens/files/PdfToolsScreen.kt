@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -37,7 +38,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -52,6 +55,9 @@ import com.example.ui.components.ToolResultCard
 import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.DarkSurfaceElevated
 import com.example.ui.theme.RedAccent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
@@ -63,11 +69,13 @@ fun PdfToolsScreen(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val isBn = language == AppLanguage.BANGLA
     var activeTool by remember { mutableStateOf(initialToolId) }
 
     var lastGeneratedPdfFile by remember { mutableStateOf<File?>(null) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
+    var isGenerating by remember { mutableStateOf(false) }
 
     // Text to PDF state
     var docTitle by remember { mutableStateOf("ToolBox Document") }
@@ -159,12 +167,19 @@ fun PdfToolsScreen(
 
                     PrimaryActionButton(
                         text = if (isBn) "পিডিএফ ফাইল তৈরি করুন" else "Generate PDF Document",
+                        enabled = !isGenerating,
                         onClick = {
-                            val file = createTextPdf(context, docTitle, docContent)
-                            if (file != null) {
-                                lastGeneratedPdfFile = file
-                                statusMessage = "PDF generated: ${file.name} (${file.length() / 1024} KB)"
-                                Toast.makeText(context, "PDF successfully generated!", Toast.LENGTH_SHORT).show()
+                            isGenerating = true
+                            coroutineScope.launch {
+                                val file = withContext(Dispatchers.IO) {
+                                    createTextPdf(context, docTitle, docContent)
+                                }
+                                isGenerating = false
+                                if (file != null) {
+                                    lastGeneratedPdfFile = file
+                                    statusMessage = "PDF generated: ${file.name} (${file.length() / 1024} KB)"
+                                    Toast.makeText(context, "PDF successfully generated!", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         },
                         icon = { Icon(Icons.Default.Description, contentDescription = null) }
@@ -193,14 +208,20 @@ fun PdfToolsScreen(
 
                     PrimaryActionButton(
                         text = if (isBn) "ছবি থেকে পিডিএফ বানান" else "Convert to PDF",
-                        enabled = singleImageUri != null,
+                        enabled = singleImageUri != null && !isGenerating,
                         onClick = {
                             singleImageUri?.let { uri ->
-                                val file = createImagesPdf(context, listOf(uri))
-                                if (file != null) {
-                                    lastGeneratedPdfFile = file
-                                    statusMessage = "PDF generated: ${file.name} (${file.length() / 1024} KB)"
-                                    Toast.makeText(context, "PDF generated successfully!", Toast.LENGTH_SHORT).show()
+                                isGenerating = true
+                                coroutineScope.launch {
+                                    val file = withContext(Dispatchers.IO) {
+                                        createImagesPdfOptimized(context, listOf(uri))
+                                    }
+                                    isGenerating = false
+                                    if (file != null) {
+                                        lastGeneratedPdfFile = file
+                                        statusMessage = "PDF generated: ${file.name} (${file.length() / 1024} KB)"
+                                        Toast.makeText(context, "PDF generated successfully!", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
@@ -228,15 +249,38 @@ fun PdfToolsScreen(
 
                     PrimaryActionButton(
                         text = if (isBn) "সব ছবি একত্র করে পিডিএফ তৈরি করুন" else "Merge into Multi-Page PDF",
-                        enabled = multiImageUris.isNotEmpty(),
+                        enabled = multiImageUris.isNotEmpty() && !isGenerating,
                         onClick = {
-                            val file = createImagesPdf(context, multiImageUris)
-                            if (file != null) {
-                                lastGeneratedPdfFile = file
-                                statusMessage = "Multi-page PDF generated: ${file.name} (${file.length() / 1024} KB)"
-                                Toast.makeText(context, "Multi-page PDF generated!", Toast.LENGTH_SHORT).show()
+                            isGenerating = true
+                            coroutineScope.launch {
+                                val file = withContext(Dispatchers.IO) {
+                                    createImagesPdfOptimized(context, multiImageUris.toList())
+                                }
+                                isGenerating = false
+                                if (file != null) {
+                                    lastGeneratedPdfFile = file
+                                    statusMessage = "Multi-page PDF generated: ${file.name} (${file.length() / 1024} KB)"
+                                    Toast.makeText(context, "Multi-page PDF generated!", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
+                    )
+                }
+            }
+
+            if (isGenerating) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(color = RedAccent)
+                    Spacer(modifier = Modifier.padding(start = 12.dp))
+                    Text(
+                        text = if (isBn) "পিডিএফ তৈরি হচ্ছে..." else "Creating PDF...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -286,7 +330,6 @@ fun createTextPdf(context: Context, title: String, content: String): File? {
 
         var y = 100f
         content.lines().forEach { line ->
-            // Simple line wrap
             if (line.length > 70) {
                 val chunks = line.chunked(70)
                 chunks.forEach { chunk ->
@@ -314,35 +357,60 @@ fun createTextPdf(context: Context, title: String, content: String): File? {
     }
 }
 
-fun createImagesPdf(context: Context, uris: List<Uri>): File? {
+// Memory-optimized PDF image rendering with inSampleSize and immediate recycling
+fun createImagesPdfOptimized(context: Context, uris: List<Uri>): File? {
     return try {
         val pdfDocument = PdfDocument()
+        val pageWidth = 595
+        val pageHeight = 842
 
         uris.forEachIndexed { index, uri ->
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
+            // Subsample image to target page dimension
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            var stream = context.contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(stream, null, bounds)
+            stream?.close()
+
+            var inSampleSize = 1
+            if (bounds.outHeight > pageHeight || bounds.outWidth > pageWidth) {
+                val halfHeight = bounds.outHeight / 2
+                val halfWidth = bounds.outWidth / 2
+                while ((halfHeight / inSampleSize) >= pageHeight && (halfWidth / inSampleSize) >= pageWidth) {
+                    inSampleSize *= 2
+                }
+            }
+
+            val opts = BitmapFactory.Options().apply {
+                this.inSampleSize = inSampleSize
+                inPreferredConfig = Bitmap.Config.RGB_565 // Half memory footprint
+            }
+
+            stream = context.contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(stream, null, opts)
+            stream?.close()
 
             if (bitmap != null) {
-                val pageWidth = 595
-                val pageHeight = 842
                 val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, index + 1).create()
                 val page = pdfDocument.startPage(pageInfo)
                 val canvas = page.canvas
 
-                // Scale bitmap to fit within page with margins
                 val scale = Math.min(
-                    (pageWidth - 80).toFloat() / bitmap.width.toFloat(),
-                    (pageHeight - 80).toFloat() / bitmap.height.toFloat()
+                    (pageWidth - 60).toFloat() / bitmap.width.toFloat(),
+                    (pageHeight - 60).toFloat() / bitmap.height.toFloat()
                 )
                 val scaledWidth = bitmap.width * scale
                 val scaledHeight = bitmap.height * scale
                 val left = (pageWidth - scaledWidth) / 2
                 val top = (pageHeight - scaledHeight) / 2
 
-                val scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaledWidth.toInt(), scaledHeight.toInt(), true)
+                val scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaledWidth.toInt().coerceAtLeast(1), scaledHeight.toInt().coerceAtLeast(1), true)
                 canvas.drawBitmap(scaledBitmap, left, top, null)
                 pdfDocument.finishPage(page)
+
+                if (scaledBitmap != bitmap) {
+                    scaledBitmap.recycle()
+                }
+                bitmap.recycle() // Promptly free native bitmap RAM
             }
         }
 

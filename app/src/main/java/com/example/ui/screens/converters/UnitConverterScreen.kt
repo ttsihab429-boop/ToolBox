@@ -325,8 +325,8 @@ fun convertTemperature(v: Double, from: String, to: String): String {
     return "${df.format(converted)} $symbol"
 }
 
-fun getUnitsForCategory(category: UnitCategory): List<UnitDef> = when (category) {
-    UnitCategory.LENGTH -> listOf(
+private val CATEGORY_UNITS_MAP: Map<UnitCategory, List<UnitDef>> = mapOf(
+    UnitCategory.LENGTH to listOf(
         UnitDef("mm", "Millimeter (mm)", "মিলিমিটার", 0.001),
         UnitDef("cm", "Centimeter (cm)", "সেন্টিমিটার", 0.01),
         UnitDef("m", "Meter (m)", "মিটার", 1.0),
@@ -335,41 +335,41 @@ fun getUnitsForCategory(category: UnitCategory): List<UnitDef> = when (category)
         UnitDef("ft", "Feet (ft)", "ফুট", 0.3048),
         UnitDef("yd", "Yard (yd)", "গজ", 0.9144),
         UnitDef("mi", "Mile (mi)", "মাইল", 1609.344)
-    )
-    UnitCategory.WEIGHT -> listOf(
+    ),
+    UnitCategory.WEIGHT to listOf(
         UnitDef("mg", "Milligram (mg)", "মিলিগ্রাম", 0.000001),
         UnitDef("g", "Gram (g)", "গ্রাম", 0.001),
         UnitDef("kg", "Kilogram (kg)", "কিলোগ্রাম / কেজি", 1.0),
         UnitDef("oz", "Ounce (oz)", "আউন্স", 0.0283495),
         UnitDef("lb", "Pound (lb)", "পাউন্ড", 0.453592),
         UnitDef("ton", "Metric Ton", "মেট্রিক টন", 1000.0)
-    )
-    UnitCategory.TEMPERATURE -> listOf(
+    ),
+    UnitCategory.TEMPERATURE to listOf(
         UnitDef("c", "Celsius (°C)", "সেলসিয়াস", 1.0),
         UnitDef("f", "Fahrenheit (°F)", "ফারেনহাইট", 1.0),
         UnitDef("k", "Kelvin (K)", "কেলভিন", 1.0)
-    )
-    UnitCategory.AREA -> listOf(
+    ),
+    UnitCategory.AREA to listOf(
         UnitDef("sq_m", "Square Meter (m²)", "বর্গমিটার", 1.0),
         UnitDef("sq_km", "Square Kilometer (km²)", "বর্গকিমি", 1000000.0),
         UnitDef("sq_ft", "Square Feet (ft²)", "বর্গফুট", 0.092903),
         UnitDef("acre", "Acre", "একর", 4046.86),
         UnitDef("hectare", "Hectare", "হেক্টর", 10000.0)
-    )
-    UnitCategory.VOLUME -> listOf(
+    ),
+    UnitCategory.VOLUME to listOf(
         UnitDef("ml", "Milliliter (ml)", "মিলিমিটার", 0.001),
         UnitDef("l", "Liter (L)", "লিটার", 1.0),
         UnitDef("m3", "Cubic Meter (m³)", "ঘনমিটার", 1000.0),
         UnitDef("cup", "Cup (US)", "কাপ", 0.24),
         UnitDef("gal", "Gallon (US)", "গ্যালন", 3.78541)
-    )
-    UnitCategory.SPEED -> listOf(
+    ),
+    UnitCategory.SPEED to listOf(
         UnitDef("ms", "Meters per second (m/s)", "মিটার/সেকেন্ড", 1.0),
         UnitDef("kmh", "Kilometers per hour (km/h)", "কিমি/ঘণ্টা", 0.277778),
         UnitDef("mph", "Miles per hour (mph)", "মাইল/ঘণ্টা", 0.44704),
         UnitDef("knot", "Knot", "নট", 0.514444)
-    )
-    UnitCategory.TIME -> listOf(
+    ),
+    UnitCategory.TIME to listOf(
         UnitDef("ms", "Millisecond (ms)", "মিলিসেকেন্ড", 0.001),
         UnitDef("s", "Second (s)", "সেকেন্ড", 1.0),
         UnitDef("min", "Minute (min)", "মিনিট", 60.0),
@@ -377,26 +377,29 @@ fun getUnitsForCategory(category: UnitCategory): List<UnitDef> = when (category)
         UnitDef("day", "Day", "দিন", 86400.0),
         UnitDef("week", "Week", "সপ্তাহ", 604800.0),
         UnitDef("year", "Year", "বছর", 31536000.0)
-    )
-    UnitCategory.DATA -> listOf(
+    ),
+    UnitCategory.DATA to listOf(
         UnitDef("b", "Bit", "বিট", 0.125),
         UnitDef("B", "Byte (B)", "বাইট", 1.0),
         UnitDef("KB", "Kilobyte (KB)", "কিলোবাইট", 1024.0),
         UnitDef("MB", "Megabyte (MB)", "মেগাবাইট", 1048576.0),
         UnitDef("GB", "Gigabyte (GB)", "গিগাবাইট", 1073741824.0),
         UnitDef("TB", "Terabyte (TB)", "টেরাবাইট", 1099511627776.0)
-    )
-    UnitCategory.PRESSURE -> listOf(
+    ),
+    UnitCategory.PRESSURE to listOf(
         UnitDef("pa", "Pascal (Pa)", "প্যাসকেল", 1.0),
         UnitDef("bar", "Bar", "বার", 100000.0),
         UnitDef("psi", "Pound per sq inch (psi)", "পিএসআই", 6894.76),
         UnitDef("atm", "Atmosphere (atm)", "অ্যাটমোস্ফিয়ার", 101325.0)
-    )
-    UnitCategory.ENERGY -> listOf(
+    ),
+    UnitCategory.ENERGY to listOf(
         UnitDef("j", "Joule (J)", "জুল", 1.0),
         UnitDef("kj", "Kilojoule (kJ)", "কিলোজুল", 1000.0),
         UnitDef("cal", "Calorie (cal)", "ক্যালরি", 4.184),
         UnitDef("kcal", "Kilocalorie (kcal)", "কিলোক্যালরি", 4184.0),
         UnitDef("kwh", "Kilowatt-hour (kWh)", "কিলোওয়াট-ঘণ্টা", 3600000.0)
     )
-}
+)
+
+fun getUnitsForCategory(category: UnitCategory): List<UnitDef> =
+    CATEGORY_UNITS_MAP[category] ?: emptyList()

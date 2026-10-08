@@ -70,7 +70,7 @@ fun StopwatchScreen(
     LaunchedEffect(isRunning) {
         var lastTime = System.currentTimeMillis()
         while (isRunning) {
-            delay(10)
+            delay(33)
             val now = System.currentTimeMillis()
             elapsedMillis += (now - lastTime)
             lastTime = now
@@ -104,25 +104,8 @@ fun StopwatchScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Big Timer Display
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .clip(CircleShape)
-                    .background(DarkSurface)
-                    .border(2.dp, RedAccent.copy(alpha = 0.5f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = formatTime(elapsedMillis),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    modifier = Modifier.testTag("stopwatch_display")
-                )
-            }
+            // Big Timer Display with isolated recomposition scope
+            StopwatchDisplay(timeProvider = { elapsedMillis })
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -220,7 +203,7 @@ fun StopwatchScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         HorizontalDivider(color = DarkBorder)
                     }
-                    itemsIndexed(laps) { index, lapTime ->
+                    itemsIndexed(laps, key = { index, _ -> "lap_${laps.size - index}" }) { index, lapTime ->
                         val lapNumber = laps.size - index
                         Row(
                             modifier = Modifier
@@ -247,5 +230,33 @@ fun StopwatchScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StopwatchDisplay(timeProvider: () -> Long) {
+    Box(
+        modifier = Modifier
+            .size(240.dp)
+            .clip(CircleShape)
+            .background(DarkSurface)
+            .border(2.dp, RedAccent.copy(alpha = 0.5f), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        val ms = timeProvider()
+        val minutes = (ms / 60000) % 60
+        val seconds = (ms / 1000) % 60
+        val millis = (ms % 1000) / 10
+        val text = String.format("%02d:%02d.%02d", minutes, seconds, millis)
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.displayMedium.copy(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            ),
+            modifier = Modifier.testTag("stopwatch_display")
+        )
     }
 }
