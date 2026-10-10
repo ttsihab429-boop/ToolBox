@@ -378,6 +378,10 @@ object Strings {
         AppLanguage.ENGLISH -> "Export PDF"
         AppLanguage.BANGLA -> "পিডিএফ এক্সপোর্ট"
     }
+    fun bizExportJpg(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Export JPG"
+        AppLanguage.BANGLA -> "জেপিজি এক্সপোর্ট"
+    }
     fun bizExportCsv(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "Export CSV"
         AppLanguage.BANGLA -> "সিএসভি এক্সপোর্ট"

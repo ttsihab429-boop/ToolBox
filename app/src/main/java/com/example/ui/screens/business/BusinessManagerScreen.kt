@@ -678,7 +678,7 @@ fun BusinessManagerScreen(
                                     Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp), tint = RedAccent)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = if (language == AppLanguage.BANGLA) "📊 ব্যবসা রিপোর্ট ও এক্সপোর্ট (PDF / CSV)" else "📊 Business Reports & Export (PDF / CSV)",
+                                        text = if (language == AppLanguage.BANGLA) "📊 ব্যবসা রিপোর্ট ও এক্সপোর্ট (PDF / JPG)" else "📊 Business Reports & Export (PDF / JPG)",
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material.icons.filled.Payments
@@ -80,6 +81,7 @@ import com.example.data.business.Supplier
 import com.example.data.business.report.BusinessReportCsvExporter
 import com.example.data.business.report.BusinessReportFileManager
 import com.example.data.business.report.BusinessReportGenerator
+import com.example.data.business.report.BusinessReportJpgExporter
 import com.example.data.business.report.BusinessReportPdfExporter
 import com.example.data.business.report.BusinessReportSummary
 import com.example.data.business.report.ReportPeriodType
@@ -131,7 +133,7 @@ fun ReportsSection(
 
     // Exporting states
     var isExporting by remember { mutableStateOf(false) }
-    var exportedFile by remember { mutableStateOf<File?>(null) }
+    var exportedFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var exportedMimeType by remember { mutableStateOf("") }
     var exportedTitle by remember { mutableStateOf("") }
     var showExportActionDialog by remember { mutableStateOf(false) }
@@ -360,7 +362,7 @@ fun ReportsSection(
                                 }
                                 isExporting = false
                                 result.onSuccess { file ->
-                                    exportedFile = file
+                                    exportedFiles = listOf(file)
                                     exportedMimeType = "application/pdf"
                                     exportedTitle = "${report.business.name} PDF Report (${report.startDate} to ${report.endDate})"
                                     showExportActionDialog = true
@@ -386,23 +388,23 @@ fun ReportsSection(
                         }
                     }
 
-                    // Export CSV Button
+                    // Export JPG Button
                     OutlinedButton(
                         onClick = {
                             scope.launch {
                                 isExporting = true
                                 val result = withContext(Dispatchers.IO) {
-                                    BusinessReportCsvExporter.exportToCsv(
+                                    BusinessReportJpgExporter.exportToJpg(
                                         context = context,
                                         report = report,
                                         language = language
                                     )
                                 }
                                 isExporting = false
-                                result.onSuccess { file ->
-                                    exportedFile = file
-                                    exportedMimeType = "text/csv"
-                                    exportedTitle = "${report.business.name} CSV Report (${report.startDate} to ${report.endDate})"
+                                result.onSuccess { files ->
+                                    exportedFiles = files
+                                    exportedMimeType = "image/jpeg"
+                                    exportedTitle = "${report.business.name} JPG Report (${report.startDate} to ${report.endDate})"
                                     showExportActionDialog = true
                                     ToolActions.triggerHaptic(context, prefs.hapticEnabled.value)
                                 }.onFailure { error ->
@@ -412,14 +414,14 @@ fun ReportsSection(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag("report_export_csv_button"),
+                            .testTag("report_export_jpg_button"),
                         shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2196F3)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF9800)),
                         enabled = !isExporting
                     ) {
-                        Icon(Icons.Default.TableChart, contentDescription = null, tint = Color(0xFF2196F3), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Image, contentDescription = null, tint = Color(0xFFFF9800), modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(Strings.bizExportCsv(language), color = Color(0xFF2196F3), fontWeight = FontWeight.Bold)
+                        Text(Strings.bizExportJpg(language), color = Color(0xFFFF9800), fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -723,33 +725,59 @@ fun ReportsSection(
     }
 
     // --- Export Action Dialog (Share or Save to Device) ---
-    if (showExportActionDialog && exportedFile != null) {
-        val fileToExport = exportedFile!!
+    if (showExportActionDialog && exportedFiles.isNotEmpty()) {
+        val isJpg = exportedMimeType == "image/jpeg"
+        val count = exportedFiles.size
         AlertDialog(
             onDismissRequest = { showExportActionDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (exportedMimeType == "application/pdf") Icons.Default.Description else Icons.Default.TableChart,
+                        imageVector = if (isJpg) Icons.Default.Image else Icons.Default.Description,
                         contentDescription = null,
-                        tint = if (exportedMimeType == "application/pdf") RedAccent else Color(0xFF2196F3)
+                        tint = if (isJpg) Color(0xFFFF9800) else RedAccent
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isBangla) "রিপোর্ট তৈরি সম্পন্ন!" else "Report Generated!",
+                        text = if (isBangla) {
+                            if (isJpg) "জেপিজি রিপোর্ট তৈরি সম্পন্ন!" else "পিডিএফ রিপোর্ট তৈরি সম্পন্ন!"
+                        } else {
+                            if (isJpg) "JPG Report Ready!" else "PDF Report Ready!"
+                        },
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (count == 1) {
+                        Text(
+                            text = exportedFiles[0].name,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    } else {
+                        Text(
+                            text = if (isBangla) "মোট $count টি পৃষ্ঠার জেপিজি ছবি প্রস্তুত:" else "$count JPG report pages generated:",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFFFF9800)
+                        )
+                        exportedFiles.forEach { f ->
+                            Text(
+                                text = "• ${f.name}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     Text(
-                        text = fileToExport.name,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = if (isBangla) "রিপোর্টটি সরাসরি অন্যান্য অ্যাপে শেয়ার করুন অথবা আপনার ফোনের Downloads ফোল্ডারে সংরক্ষণ করুন।" else "Share this report with apps (WhatsApp, Email, Drive) or save directly to Downloads.",
+                        text = if (isBangla) {
+                            if (isJpg) "রিপোর্ট ছবিটি সরাসরি অন্যান্য অ্যাপে (WhatsApp, Messenger) শেয়ার করুন অথবা আপনার ফোনে Downloads এ সংরক্ষণ করুন।"
+                            else "রিপোর্টটি সরাসরি অন্যান্য অ্যাপে শেয়ার করুন অথবা আপনার ফোনের Downloads ফোল্ডারে সংরক্ষণ করুন।"
+                        } else {
+                            if (isJpg) "Share report image(s) directly to WhatsApp/Email or save to Downloads/Gallery."
+                            else "Share this report with apps (WhatsApp, Email, Drive) or save directly to Downloads."
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -761,9 +789,9 @@ fun ReportsSection(
                     Button(
                         onClick = {
                             showExportActionDialog = false
-                            val result = BusinessReportFileManager.shareReportFile(
+                            val result = BusinessReportFileManager.shareReportFiles(
                                 context = context,
-                                file = fileToExport,
+                                files = exportedFiles,
                                 mimeType = exportedMimeType,
                                 title = exportedTitle
                             )
@@ -771,7 +799,7 @@ fun ReportsSection(
                                 Toast.makeText(context, "Failed to share: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = RedAccent)
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isJpg) Color(0xFFFF9800) else RedAccent)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
@@ -782,11 +810,11 @@ fun ReportsSection(
                     OutlinedButton(
                         onClick = {
                             showExportActionDialog = false
-                            val result = BusinessReportFileManager.saveReportToDownloads(
+                            val result = BusinessReportFileManager.saveReportFilesToDownloads(
                                 context = context,
-                                file = fileToExport,
+                                files = exportedFiles,
                                 mimeType = exportedMimeType,
-                                displayName = fileToExport.name
+                                baseDisplayName = exportedFiles[0].name
                             )
                             result.onSuccess { path ->
                                 Toast.makeText(context, "${Strings.bizExportSuccess(language)}: $path", Toast.LENGTH_LONG).show()

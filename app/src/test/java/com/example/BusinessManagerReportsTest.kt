@@ -9,7 +9,9 @@ import com.example.data.business.Customer
 import com.example.data.business.ProductItem
 import com.example.data.business.Supplier
 import com.example.data.business.report.BusinessReportCsvExporter
+import com.example.data.business.report.BusinessReportFileManager
 import com.example.data.business.report.BusinessReportGenerator
+import com.example.data.business.report.BusinessReportJpgExporter
 import com.example.data.business.report.BusinessReportPdfExporter
 import com.example.data.business.report.ReportPeriodType
 import com.example.localization.AppLanguage
@@ -359,5 +361,157 @@ class BusinessManagerReportsTest {
         val pdfFile = pdfResult.getOrNull()!!
         assertTrue(pdfFile.exists())
         assertTrue(pdfFile.length() > 1000)
+    }
+
+    @Test
+    fun testJpgReportExportBanglaAndEnglish() {
+        val biz = BusinessProfile(id = 10, name = "Shikdar Garments (শিকদার গার্মেন্টস)", businessType = "Retail", currency = "৳", phone = "01711223344")
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+
+        val tx1 = BusinessTransaction(
+            id = 1,
+            businessId = 10,
+            type = "SALE",
+            title = "Cotton Shirt Wholesale",
+            partyName = "Tariqul Islam",
+            amount = 4500.0,
+            paidAmount = 3000.0, // due 1500
+            dateString = todayStr
+        )
+        val tx2 = BusinessTransaction(
+            id = 2,
+            businessId = 10,
+            type = "EXPENSE",
+            title = "Showroom Rent",
+            amount = 1200.0,
+            paidAmount = 1200.0,
+            dateString = todayStr
+        )
+
+        val report = BusinessReportGenerator.generateReport(
+            business = biz,
+            periodType = ReportPeriodType.DAILY,
+            allTransactions = listOf(tx1, tx2)
+        )
+
+        // Test Bangla JPG export
+        val resultBn = BusinessReportJpgExporter.exportToJpg(context, report, AppLanguage.BANGLA)
+        assertTrue(resultBn.isSuccess)
+        val filesBn = resultBn.getOrNull()!!
+        assertEquals(1, filesBn.size)
+        val fileBn = filesBn[0]
+        assertTrue(fileBn.exists())
+        assertTrue(fileBn.length() > 1000)
+        assertTrue(fileBn.name.endsWith(".jpg"))
+
+        // Verify JPEG magic bytes: 0xFF, 0xD8, 0xFF
+        FileInputStream(fileBn).use { fis ->
+            val header = ByteArray(3)
+            fis.read(header)
+            assertEquals(0xFF.toByte(), header[0])
+            assertEquals(0xD8.toByte(), header[1])
+            assertEquals(0xFF.toByte(), header[2])
+        }
+
+        // Test English JPG export
+        val resultEn = BusinessReportJpgExporter.exportToJpg(context, report, AppLanguage.ENGLISH)
+        assertTrue(resultEn.isSuccess)
+        val filesEn = resultEn.getOrNull()!!
+        assertEquals(1, filesEn.size)
+        assertTrue(filesEn[0].exists())
+        assertTrue(filesEn[0].length() > 1000)
+    }
+
+    @Test
+    fun testLargeReportJpgPaginationAcrossMultipleImages() {
+        val biz = BusinessProfile(id = 12, name = "Mega Distribution Center", currency = "৳")
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+
+        // Create 65 transactions to force multi-page image export
+        val largeList = (1..65).map { i ->
+            BusinessTransaction(
+                id = i.toLong(),
+                businessId = 12,
+                type = if (i % 3 == 0) "SALE" else if (i % 3 == 1) "PURCHASE" else "EXPENSE",
+                title = "Wholesale Transaction Batch #$i",
+                partyName = "Corporate Client $i",
+                amount = 250.0 * i,
+                paidAmount = 200.0 * i,
+                dateString = todayStr
+            )
+        }
+
+        val report = BusinessReportGenerator.generateReport(
+            business = biz,
+            periodType = ReportPeriodType.MONTHLY,
+            allTransactions = largeList
+        )
+
+        val result = BusinessReportJpgExporter.exportToJpg(context, report, AppLanguage.BANGLA)
+        assertTrue(result.isSuccess)
+        val files = result.getOrNull()!!
+        // Multi-page report should be split across multiple images
+        assertTrue("Expected multiple images for 65 transactions, got ${files.size}", files.size > 1)
+
+        for ((idx, f) in files.withIndex()) {
+            assertTrue("File ${f.name} does not exist", f.exists())
+            assertTrue("File ${f.name} too small", f.length() > 1000)
+            assertTrue("Filename should contain page indicator", f.name.contains("page_${idx + 1}"))
+            FileInputStream(f).use { fis ->
+                val header = ByteArray(3)
+                fis.read(header)
+                assertEquals(0xFF.toByte(), header[0])
+                assertEquals(0xD8.toByte(), header[1])
+                assertEquals(0xFF.toByte(), header[2])
+            }
+        }
+    }
+
+    @Test
+    fun testEmptyReportJpgExport() {
+        val biz = BusinessProfile(id = 15, name = "Zero Trading")
+        val emptyReport = BusinessReportGenerator.generateReport(
+            business = biz,
+            periodType = ReportPeriodType.DAILY,
+            allTransactions = emptyList()
+        )
+
+        val result = BusinessReportJpgExporter.exportToJpg(context, emptyReport, AppLanguage.BANGLA)
+        assertTrue(result.isSuccess)
+        val files = result.getOrNull()!!
+        assertEquals(1, files.size)
+        assertTrue(files[0].exists())
+        assertTrue(files[0].length() > 1000)
+    }
+
+    @Test
+    fun testFileManagerSaveAndShareJpgSupport() {
+        val biz = BusinessProfile(id = 20, name = "Quick Store")
+        val report = BusinessReportGenerator.generateReport(
+            business = biz,
+            periodType = ReportPeriodType.DAILY,
+            allTransactions = emptyList()
+        )
+
+        val files = BusinessReportJpgExporter.exportToJpg(context, report, AppLanguage.BANGLA).getOrNull()!!
+        assertTrue(files.isNotEmpty())
+
+        // Save multiple files support
+        val saveResult = BusinessReportFileManager.saveReportFilesToDownloads(
+            context = context,
+            files = files,
+            mimeType = "image/jpeg",
+            baseDisplayName = files[0].name
+        )
+        assertTrue(saveResult.isSuccess)
+
+        // Share multiple files support
+        val shareResult = BusinessReportFileManager.shareReportFiles(
+            context = context,
+            files = files,
+            mimeType = "image/jpeg",
+            title = "Test JPG Share"
+        )
+        assertTrue(shareResult.isSuccess)
     }
 }

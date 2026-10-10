@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -103,6 +104,7 @@ fun DeviceToolsScreen(
     BackHandler(onBack = onBack)
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(initialTab) }
+    val sensors = remember(context) { getSensorsList(context) }
 
     Scaffold(
         topBar = {
@@ -244,7 +246,6 @@ fun DeviceToolsScreen(
                     }
 
                     DeviceInfoTab.SENSORS -> {
-                        val sensors = getSensorsList(context)
                         item {
                             Text(
                                 text = "${sensors.size} Hardware Sensors Detected",
@@ -254,7 +255,7 @@ fun DeviceToolsScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        items(sensors) { sensor ->
+                        itemsIndexed(sensors, key = { index, sensor -> "${sensor.type}_${sensor.name}_$index" }) { _, sensor ->
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
