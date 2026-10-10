@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
@@ -203,6 +204,89 @@ fun HomeScreen(
                 }
             }
         } else {
+            // Quick Phone Scan Hero Card
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable {
+                            val scanTool = ToolRegistry.getTool("quick_scan")
+                            if (scanTool != null) onToolClick(scanTool)
+                        },
+                    shape = RoundedCornerShape(20.dp),
+                    color = DarkSurfaceElevated,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, RedAccent.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(RedAccent.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = RedAccent,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column {
+                                Text(
+                                    text = if (language == AppLanguage.BANGLA) "কুইক ফোন ডায়াগনস্টিক" else "Quick Phone Diagnostic",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = if (language == AppLanguage.BANGLA) "এক ট্যাপে পূর্ণাঙ্গ ডিভাইস স্বাস্থ্য পরীক্ষা" else "One-tap full hardware & system scan",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (language == AppLanguage.BANGLA) "ব্যাটারি • র‍্যাম • স্টোরেজ • নেটওয়ার্ক • সেন্সর" else "Battery • RAM • Storage • Network • Sensors",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = RedAccent
+                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = RedAccent
+                            ) {
+                                Text(
+                                    text = if (language == AppLanguage.BANGLA) "স্ক্যান শুরু করুন" else "Start Scan",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Recently Used section (if enabled & not empty)
             if (recentTools.isNotEmpty()) {
                 item {
@@ -247,14 +331,22 @@ fun HomeScreen(
 
                 val categories = remember(language) {
                     listOf(
-                        ToolCategory.CALCULATORS to Strings.catCalculators(language),
+                        ToolCategory.QUICK_SCAN to Strings.catQuickScan(language),
+                        ToolCategory.DEVICE_TOOLS to Strings.catDeviceTools(language),
+                        ToolCategory.HARDWARE_CHECKUP to Strings.catHardwareCheckup(language),
+                        ToolCategory.NETWORK_TOOLS to Strings.catNetworkTools(language),
+                        ToolCategory.PRIVACY_CENTER to Strings.catPrivacyCenter(language),
+                        ToolCategory.APP_INSPECTOR to Strings.catAppInspector(language),
+                        ToolCategory.PERFORMANCE_MONITOR to Strings.catPerformanceMonitor(language),
+                        ToolCategory.WIFI_QR_TOOLS to Strings.catWifiQr(language),
                         ToolCategory.UNIT_CONVERTER to Strings.catConverters(language),
                         ToolCategory.DATE_TIME to Strings.catDateTime(language),
                         ToolCategory.QR_SCANNER to Strings.catQrScanner(language),
                         ToolCategory.TEXT_TOOLS to Strings.catTextTools(language),
                         ToolCategory.EVERYDAY_TOOLS to Strings.catEveryday(language),
                         ToolCategory.BANGLADESH_TOOLS to Strings.catBangladesh(language),
-                        ToolCategory.FILE_TOOLS to Strings.catFiles(language)
+                        ToolCategory.FILE_TOOLS to Strings.catFiles(language),
+                        ToolCategory.CALCULATORS to Strings.catCalculators(language)
                     )
                 }
 

@@ -57,6 +57,18 @@ fun ToolDetailHostScreen(
     BackHandler(onBack = onBack)
 
     when (toolId) {
+        "quick_scan" -> QuickScanScreen(language, prefs, onBack)
+        "device_info" -> DeviceToolsScreen(DeviceInfoTab.SYSTEM, language, prefs, onBack)
+        "battery_info" -> DeviceToolsScreen(DeviceInfoTab.BATTERY, language, prefs, onBack)
+        "storage_info" -> DeviceToolsScreen(DeviceInfoTab.STORAGE, language, prefs, onBack)
+        "sensors_list" -> DeviceToolsScreen(DeviceInfoTab.SENSORS, language, prefs, onBack)
+        "hardware_checkup" -> HardwareCheckupScreen(language, prefs, onBack)
+        "network_status", "ping_test", "network_doctor" -> NetworkToolsScreen(language, prefs, onBack)
+        "privacy_center" -> PrivacyCenterScreen(language, prefs, onBack)
+        "app_inspector" -> AppInspectorScreen(language, prefs, onBack)
+        "perf_monitor" -> PerformanceMonitorScreen(language, prefs, onBack)
+        "wifi_qr" -> WifiQrScreen(language, prefs, onBack)
+
         "basic_calc" -> BasicCalculatorScreen(language, prefs, onBack)
         "sci_calc" -> ScientificCalculatorScreen(language, prefs, onBack)
 

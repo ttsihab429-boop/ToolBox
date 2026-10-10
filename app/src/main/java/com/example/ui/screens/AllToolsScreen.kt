@@ -132,7 +132,14 @@ fun AllToolsScreen(
             }
             items(ToolCategory.entries, key = { it.name }) { cat ->
                 val label = when (cat) {
-                    ToolCategory.CALCULATORS -> Strings.catCalculators(language)
+                    ToolCategory.QUICK_SCAN -> Strings.catQuickScan(language)
+                    ToolCategory.DEVICE_TOOLS -> Strings.catDeviceTools(language)
+                    ToolCategory.HARDWARE_CHECKUP -> Strings.catHardwareCheckup(language)
+                    ToolCategory.NETWORK_TOOLS -> Strings.catNetworkTools(language)
+                    ToolCategory.PRIVACY_CENTER -> Strings.catPrivacyCenter(language)
+                    ToolCategory.APP_INSPECTOR -> Strings.catAppInspector(language)
+                    ToolCategory.PERFORMANCE_MONITOR -> Strings.catPerformanceMonitor(language)
+                    ToolCategory.WIFI_QR_TOOLS -> Strings.catWifiQr(language)
                     ToolCategory.UNIT_CONVERTER -> Strings.catConverters(language)
                     ToolCategory.DATE_TIME -> Strings.catDateTime(language)
                     ToolCategory.QR_SCANNER -> Strings.catQrScanner(language)
@@ -140,6 +147,7 @@ fun AllToolsScreen(
                     ToolCategory.EVERYDAY_TOOLS -> Strings.catEveryday(language)
                     ToolCategory.BANGLADESH_TOOLS -> Strings.catBangladesh(language)
                     ToolCategory.FILE_TOOLS -> Strings.catFiles(language)
+                    ToolCategory.CALCULATORS -> Strings.catCalculators(language)
                 }
                 FilterChip(
                     selected = activeCategory == cat,

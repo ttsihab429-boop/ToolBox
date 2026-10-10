@@ -24,6 +24,10 @@ object Strings {
         AppLanguage.ENGLISH -> "Tools"
         AppLanguage.BANGLA -> "টুলস"
     }
+    fun navBusiness(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Business"
+        AppLanguage.BANGLA -> "ব্যবসা"
+    }
     fun navFavorites(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "Favorites"
         AppLanguage.BANGLA -> "পছন্দের"
@@ -105,6 +109,10 @@ object Strings {
     fun confirm(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "Confirm"
         AppLanguage.BANGLA -> "নিশ্চিত"
+    }
+    fun ok(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "OK"
+        AppLanguage.BANGLA -> "ঠিক আছে"
     }
     fun reset(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "Reset"
@@ -257,5 +265,161 @@ object Strings {
     fun privacyDesc(lang: AppLanguage) = when (lang) {
         AppLanguage.ENGLISH -> "ToolBox is 100% offline-first. Your notes, calculations, files, and settings stay private on your device. No analytics, no ads, no trackers, and no internet account required."
         AppLanguage.BANGLA -> "টুলবক্স সম্পূর্ণ অফলাইন-ফার্স্ট। আপনার নোট, হিসাব, ফাইল ও সেটিংস শুধুমাত্র আপনার ডিভাইসেই সংরক্ষিত থাকে। কোনো ট্র্যাকিং বা ইন্টারনেট অ্যাকাউন্টের প্রয়োজন নেই।"
+    }
+
+    // Business Manager Strings
+    fun bizDashboard(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Dashboard"
+        AppLanguage.BANGLA -> "ড্যাশবোর্ড"
+    }
+    fun bizCustomers(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Customers"
+        AppLanguage.BANGLA -> "কাস্টমার"
+    }
+    fun bizSuppliers(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Suppliers"
+        AppLanguage.BANGLA -> "মহাজন / সাপ্লায়ার"
+    }
+    fun bizInventory(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Inventory"
+        AppLanguage.BANGLA -> "স্টক ও পণ্য"
+    }
+    fun bizAddCustomer(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Add Customer"
+        AppLanguage.BANGLA -> "নতুন কাস্টমার যোগ"
+    }
+    fun bizAddSupplier(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Add Supplier"
+        AppLanguage.BANGLA -> "নতুন সাপ্লায়ার যোগ"
+    }
+    fun bizAddProduct(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Add Product"
+        AppLanguage.BANGLA -> "নতুন পণ্য যোগ"
+    }
+    fun bizRecordPayment(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Record Payment"
+        AppLanguage.BANGLA -> "পেমেন্ট গ্রহণ / প্রদান"
+    }
+    fun bizTotalDue(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Total Due"
+        AppLanguage.BANGLA -> "মোট বাকি"
+    }
+    fun bizTotalPayable(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Total Payable"
+        AppLanguage.BANGLA -> "মোট পাওনা"
+    }
+    fun bizStockQuantity(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Stock Quantity"
+        AppLanguage.BANGLA -> "মজুদ পরিমাণ"
+    }
+    fun bizLowStockAlert(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Low Stock"
+        AppLanguage.BANGLA -> "কম স্টক"
+    }
+    fun bizOutOfStock(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Out of Stock"
+        AppLanguage.BANGLA -> "স্টক শেষ"
+    }
+    fun bizAdjustStock(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Adjust Stock"
+        AppLanguage.BANGLA -> "স্টক সমন্বয়"
+    }
+    fun bizCloudSync(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Cloud Backup & Sync"
+        AppLanguage.BANGLA -> "ক্লাউড ব্যাকআপ ও সিঙ্ক"
+    }
+    fun bizSyncNow(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Sync Now"
+        AppLanguage.BANGLA -> "এখনই সিঙ্ক করুন"
+    }
+    fun bizLastSynced(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Last Synced:"
+        AppLanguage.BANGLA -> "সর্বশেষ সিঙ্ক:"
+    }
+    fun bizNeverSynced(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Never"
+        AppLanguage.BANGLA -> "কখনও হয়নি"
+    }
+    fun bizStatusSynced(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Synced"
+        AppLanguage.BANGLA -> "সিঙ্ক সম্পন্ন"
+    }
+    fun bizStatusSyncing(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Syncing..."
+        AppLanguage.BANGLA -> "সিঙ্ক হচ্ছে..."
+    }
+    fun bizStatusOffline(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Offline (Queued)"
+        AppLanguage.BANGLA -> "অফলাইন (কিউতে আছে)"
+    }
+    fun bizStatusSetupRequired(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Setup Required"
+        AppLanguage.BANGLA -> "সেটআপ প্রয়োজন"
+    }
+    fun bizStatusAuthRequired(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Sign-in Required"
+        AppLanguage.BANGLA -> "সাইন ইন প্রয়োজন"
+    }
+    fun bizSyncDetails(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Sync & Backup Status"
+        AppLanguage.BANGLA -> "সিঙ্ক ও ব্যাকআপ বিবরণ"
+    }
+    fun bizPendingChanges(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Pending changes queued"
+        AppLanguage.BANGLA -> "অপেক্ষমান পরিবর্তন"
+    }
+
+    // Business Reports & Export
+    fun bizReports(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Reports"
+        AppLanguage.BANGLA -> "রিপোর্ট"
+    }
+    fun bizExportPdf(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Export PDF"
+        AppLanguage.BANGLA -> "পিডিএফ এক্সপোর্ট"
+    }
+    fun bizExportCsv(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Export CSV"
+        AppLanguage.BANGLA -> "সিএসভি এক্সপোর্ট"
+    }
+    fun bizDailyReport(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Daily Report"
+        AppLanguage.BANGLA -> "দৈনিক রিপোর্ট"
+    }
+    fun bizMonthlyReport(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Monthly Report"
+        AppLanguage.BANGLA -> "চলতি মাস"
+    }
+    fun bizPrevMonthReport(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Previous Month"
+        AppLanguage.BANGLA -> "গত মাস"
+    }
+    fun bizCustomRange(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Custom Range"
+        AppLanguage.BANGLA -> "কাস্টম সময়কাল"
+    }
+    fun bizSelectBusiness(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Select Business"
+        AppLanguage.BANGLA -> "ব্যবসা নির্বাচন করুন"
+    }
+    fun bizShareReport(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Share Report"
+        AppLanguage.BANGLA -> "রিপোর্ট শেয়ার করুন"
+    }
+    fun bizSaveToDevice(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Save to Device"
+        AppLanguage.BANGLA -> "ডিভাইসে সংরক্ষণ"
+    }
+    fun bizNoTransactionsFound(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "No transactions in selected period"
+        AppLanguage.BANGLA -> "নির্বাচিত সময়কালে কোনো লেনদেন নেই"
+    }
+    fun bizExportSuccess(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Report exported successfully"
+        AppLanguage.BANGLA -> "রিপোর্ট সফলভাবে এক্সপোর্ট হয়েছে"
+    }
+    fun bizExportFailed(lang: AppLanguage) = when (lang) {
+        AppLanguage.ENGLISH -> "Failed to export report"
+        AppLanguage.BANGLA -> "রিপোর্ট এক্সপোর্ট ব্যর্থ হয়েছে"
     }
 }

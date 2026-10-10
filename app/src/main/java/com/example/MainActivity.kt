@@ -23,10 +23,12 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -48,6 +50,7 @@ import com.example.data.NotesRepository
 import com.example.data.PreferencesManager
 import com.example.data.ShoppingRepository
 import com.example.data.TodoRepository
+import com.example.data.business.BusinessRepository
 import com.example.localization.AppLanguage
 import com.example.localization.Strings
 import com.example.model.ToolCategory
@@ -58,12 +61,13 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.SplashScreen
 import com.example.ui.screens.ToolDetailHostScreen
+import com.example.ui.screens.business.BusinessManagerScreen
 import com.example.ui.theme.DarkBorder
 import com.example.ui.theme.DarkSurface
 import com.example.ui.theme.RedAccent
 import com.example.ui.theme.ToolBoxTheme
 
-enum class MainTab { HOME, TOOLS, FAVORITES, SETTINGS }
+enum class MainTab { HOME, TOOLS, BUSINESS, FAVORITES, SETTINGS }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +78,7 @@ class MainActivity : ComponentActivity() {
         val notesRepo = NotesRepository(applicationContext)
         val todoRepo = TodoRepository(applicationContext)
         val shoppingRepo = ShoppingRepository(applicationContext)
+        val businessRepo = BusinessRepository(applicationContext)
 
         setContent {
             val themeMode by prefs.themeMode.collectAsState()
@@ -99,7 +104,8 @@ class MainActivity : ComponentActivity() {
                         prefs = prefs,
                         notesRepository = notesRepo,
                         todoRepository = todoRepo,
-                        shoppingRepository = shoppingRepo
+                        shoppingRepository = shoppingRepo,
+                        businessRepository = businessRepo
                     )
                 }
             }
@@ -113,7 +119,8 @@ fun ToolBoxMainContent(
     prefs: PreferencesManager,
     notesRepository: NotesRepository,
     todoRepository: TodoRepository,
-    shoppingRepository: ShoppingRepository
+    shoppingRepository: ShoppingRepository,
+    businessRepository: BusinessRepository
 ) {
     val context = LocalContext.current
     var currentTab by remember { mutableStateOf(MainTab.HOME) }
@@ -147,6 +154,7 @@ fun ToolBoxMainContent(
                     val tabs = listOf(
                         MainTab.HOME to (Strings.navHome(language) to (Icons.Default.Home to Icons.Outlined.Home)),
                         MainTab.TOOLS to (Strings.navTools(language) to (Icons.Default.Build to Icons.Outlined.Build)),
+                        MainTab.BUSINESS to (Strings.navBusiness(language) to (Icons.Default.Storefront to Icons.Outlined.Storefront)),
                         MainTab.FAVORITES to (Strings.navFavorites(language) to (Icons.Default.Favorite to Icons.Outlined.FavoriteBorder)),
                         MainTab.SETTINGS to (Strings.navSettings(language) to (Icons.Default.Settings to Icons.Outlined.Settings))
                     )
@@ -214,6 +222,14 @@ fun ToolBoxMainContent(
                                 prefs.recordToolUsed(tool.id)
                                 activeToolId = tool.id
                             }
+                        )
+                    }
+
+                    MainTab.BUSINESS -> {
+                        BusinessManagerScreen(
+                            language = language,
+                            prefs = prefs,
+                            businessRepository = businessRepository
                         )
                     }
 

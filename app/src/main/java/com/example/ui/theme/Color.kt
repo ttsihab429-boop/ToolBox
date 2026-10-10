@@ -9,6 +9,10 @@ val RedAccentDark = Color(0xFFB71C1C)
 val RedAccentContainer = Color(0xFF2A1416)
 val OnRedAccentContainer = Color(0xFFFFB4AB)
 
+// Success and Status Accent Colors
+val GreenSuccess = Color(0xFF4CAF50)
+val OrangeWarning = Color(0xFFFF9800)
+
 // Dark Theme Colors (Deep Black first)
 val DarkBackground = Color(0xFF0A0B0E)
 val DarkSurface = Color(0xFF121418)
