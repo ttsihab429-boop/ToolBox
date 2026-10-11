@@ -154,4 +154,46 @@ class BusinessManagerSyncTest {
         val payable = repository.calculateSupplierPayable(supplier!!, txs)
         assertEquals(5000.0, payable, 0.01)
     }
+
+    @Test
+    fun testDownloadAndRestorePreservesLocalDataAndQueueWithoutConfig() = runBlocking {
+        val businesses = repository.businesses.first()
+        val bizId = businesses.first().id
+        val dao = AppDatabase.getDatabase(context).businessDao()
+
+        // Create a local product and verify queue item
+        val prodId = repository.saveProduct(
+            businessId = bizId,
+            name = "Copper Wire 1.5mm",
+            currentQuantity = 100.0
+        )
+        val queueCountBefore = dao.getPendingSyncItemsList().size
+        assertTrue(queueCountBefore > 0)
+
+        // Attempt download & restore without Firebase config
+        val restoreResult = repository.downloadAndRestoreFromCloud()
+        assertTrue(restoreResult is com.example.data.business.sync.RestoreResult.IncompleteSetup)
+
+        // Verify local product and queue count are intact
+        val prod = repository.getProductById(prodId)
+        assertNotNull(prod)
+        assertEquals("Copper Wire 1.5mm", prod?.name)
+        val queueCountAfter = dao.getPendingSyncItemsList().size
+        assertEquals(queueCountBefore, queueCountAfter)
+    }
+
+    @Test
+    fun testBackupAllChecksRequirementsSafely() = runBlocking {
+        val backupResult = repository.backupAllToCloud()
+        assertTrue(backupResult is SyncResult.IncompleteSetup)
+        assertEquals(SyncStatusEnum.SETUP_REQUIRED, syncManager.syncState.value.status)
+    }
+
+    @Test
+    fun testSignOutPreservesOfflineState() = runBlocking {
+        repository.signOut(context)
+        val state = syncManager.syncState.value
+        assertNotNull(state.lastActionMessage)
+        assertTrue(state.lastActionMessage?.contains("Offline", ignoreCase = true) == true)
+    }
 }

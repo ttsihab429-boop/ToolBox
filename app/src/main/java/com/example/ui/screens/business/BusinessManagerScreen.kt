@@ -420,6 +420,31 @@ fun BusinessManagerScreen(
                                     scope.launch {
                                         businessRepository.triggerSync(isManual = true)
                                     }
+                                },
+                                onBackupAll = {
+                                    scope.launch {
+                                        businessRepository.backupAllToCloud()
+                                    }
+                                },
+                                onRestoreFromCloud = {
+                                    scope.launch {
+                                        businessRepository.downloadAndRestoreFromCloud()
+                                    }
+                                },
+                                onSignInWithGoogle = {
+                                    scope.launch {
+                                        businessRepository.signInWithGoogle(context)
+                                    }
+                                },
+                                onSignOut = {
+                                    scope.launch {
+                                        businessRepository.signOut(context)
+                                    }
+                                },
+                                onSwitchAccount = {
+                                    scope.launch {
+                                        businessRepository.switchAccount(context)
+                                    }
                                 }
                             )
 
@@ -1244,8 +1269,9 @@ fun AddEditTransactionDialog(
 ) {
     var type by remember { mutableStateOf(initialTransaction?.type ?: defaultType) }
     var title by remember { mutableStateOf(initialTransaction?.title ?: "") }
-    var amountText by remember { mutableStateOf(initialTransaction?.let { if (it.amount > 0) it.amount.toString() else "" } ?: "") }
-    var paidText by remember { mutableStateOf(initialTransaction?.let { if (it.paidAmount > 0) it.paidAmount.toString() else "" } ?: "") }
+    var amountText by remember { mutableStateOf(initialTransaction?.let { if (it.amount > 0) formatDecimal(it.amount) else "" } ?: "") }
+    var paidText by remember { mutableStateOf(initialTransaction?.let { if (it.paidAmount > 0) formatDecimal(it.paidAmount) else "" } ?: "") }
+    var dueText by remember { mutableStateOf(initialTransaction?.let { if (it.dueAmount > 0) formatDecimal(it.dueAmount) else "" } ?: "") }
     var partyName by remember { mutableStateOf(initialTransaction?.partyName ?: "") }
     var partyPhone by remember { mutableStateOf(initialTransaction?.partyPhone ?: "") }
     var note by remember { mutableStateOf(initialTransaction?.note ?: "") }
@@ -1253,15 +1279,15 @@ fun AddEditTransactionDialog(
     var selectedCustomerId by remember { mutableStateOf(initialTransaction?.customerId) }
     var selectedSupplierId by remember { mutableStateOf(initialTransaction?.supplierId) }
     var selectedProductId by remember { mutableStateOf(initialTransaction?.productId) }
-    var quantityText by remember { mutableStateOf(initialTransaction?.let { if (it.quantity > 0) it.quantity.toString() else "" } ?: "") }
-    var unitPriceText by remember { mutableStateOf(initialTransaction?.let { if (it.unitPrice > 0) it.unitPrice.toString() else "" } ?: "") }
+    var quantityText by remember { mutableStateOf(initialTransaction?.let { if (it.quantity > 0) formatDecimal(it.quantity) else "" } ?: "") }
+    var unitPriceText by remember { mutableStateOf(initialTransaction?.let { if (it.unitPrice > 0) formatDecimal(it.unitPrice) else "" } ?: "") }
 
     var partyDropdownExpanded by remember { mutableStateOf(false) }
     var productDropdownExpanded by remember { mutableStateOf(false) }
 
     val amountVal = amountText.toDoubleOrNull() ?: 0.0
     val paidVal = paidText.toDoubleOrNull() ?: 0.0
-    val calculatedDue = (amountVal - paidVal).coerceAtLeast(0.0)
+    val dueVal = dueText.toDoubleOrNull() ?: 0.0
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1377,11 +1403,16 @@ fun AddEditTransactionDialog(
                                                 selectedProductId = prod.id
                                                 title = prod.name
                                                 val unitP = if (type == "SALE") prod.sellingPrice else prod.purchasePrice
-                                                unitPriceText = unitP.toString()
+                                                unitPriceText = formatDecimal(unitP)
                                                 if (quantityText.isBlank()) quantityText = "1"
                                                 val q = quantityText.toDoubleOrNull() ?: 1.0
                                                 val total = unitP * q
-                                                amountText = total.toString()
+                                                amountText = formatDecimal(total)
+                                                val pVal = paidText.toDoubleOrNull()
+                                                if (pVal != null && paidText.isNotBlank()) {
+                                                    val newDue = (total - pVal).coerceAtLeast(0.0)
+                                                    dueText = if (newDue > 0) formatDecimal(newDue) else "0"
+                                                }
                                                 productDropdownExpanded = false
                                             }
                                         )
@@ -1406,7 +1437,13 @@ fun AddEditTransactionDialog(
                                     val q = it.toDoubleOrNull() ?: 0.0
                                     val up = unitPriceText.toDoubleOrNull() ?: 0.0
                                     if (q > 0 && up > 0) {
-                                        amountText = (q * up).toString()
+                                        val total = q * up
+                                        amountText = formatDecimal(total)
+                                        val pVal = paidText.toDoubleOrNull()
+                                        if (pVal != null && paidText.isNotBlank()) {
+                                            val newDue = (total - pVal).coerceAtLeast(0.0)
+                                            dueText = if (newDue > 0) formatDecimal(newDue) else "0"
+                                        }
                                     }
                                 },
                                 label = { Text(if (language == AppLanguage.BANGLA) "পরিমাণ (Qty)" else "Quantity") },
@@ -1428,7 +1465,13 @@ fun AddEditTransactionDialog(
                                     val q = quantityText.toDoubleOrNull() ?: 1.0
                                     val up = it.toDoubleOrNull() ?: 0.0
                                     if (q > 0 && up > 0) {
-                                        amountText = (q * up).toString()
+                                        val total = q * up
+                                        amountText = formatDecimal(total)
+                                        val pVal = paidText.toDoubleOrNull()
+                                        if (pVal != null && paidText.isNotBlank()) {
+                                            val newDue = (total - pVal).coerceAtLeast(0.0)
+                                            dueText = if (newDue > 0) formatDecimal(newDue) else "0"
+                                        }
                                     }
                                 },
                                 label = { Text("${if (language == AppLanguage.BANGLA) "দর / ইউনিট" else "Unit Price"} ($currency)") },
@@ -1463,20 +1506,38 @@ fun AddEditTransactionDialog(
                     )
                 }
 
-                // Total Amount
+                // Total Amount / Total Sales
                 item {
                     OutlinedTextField(
                         value = amountText,
-                        onValueChange = {
-                            amountText = it
+                        onValueChange = { newAmount ->
+                            amountText = newAmount
                             if (type == "EXPENSE") {
-                                paidText = it
+                                paidText = newAmount
+                                dueText = "0"
+                            } else {
+                                val newAmtVal = newAmount.toDoubleOrNull()
+                                val pVal = paidText.toDoubleOrNull()
+                                if (newAmtVal != null && pVal != null && paidText.isNotBlank()) {
+                                    val calculatedDue = (newAmtVal - pVal).coerceAtLeast(0.0)
+                                    dueText = if (calculatedDue > 0) formatDecimal(calculatedDue) else "0"
+                                }
                             }
                         },
-                        label = { Text("${if (language == AppLanguage.BANGLA) "মোট টাকা" else "Total Amount"} ($currency) *") },
+                        label = {
+                            Text(
+                                "${if (type == "SALE") {
+                                    if (language == AppLanguage.BANGLA) "মোট বিক্রি" else "Total Sales"
+                                } else {
+                                    if (language == AppLanguage.BANGLA) "মোট টাকা" else "Total Amount"
+                                }} ($currency) *"
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(if (type == "SALE") "total_sales_input" else "total_amount_input"),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = RedAccent,
                             unfocusedBorderColor = DarkBorder,
@@ -1486,7 +1547,7 @@ fun AddEditTransactionDialog(
                     )
                 }
 
-                // Paid Amount & Full Paid button
+                // Paid Amount & Customer / Supplier Due Fields
                 if (type != "EXPENSE") {
                     item {
                         Row(
@@ -1495,11 +1556,21 @@ fun AddEditTransactionDialog(
                         ) {
                             OutlinedTextField(
                                 value = paidText,
-                                onValueChange = { paidText = it },
+                                onValueChange = { newPaid ->
+                                    paidText = newPaid
+                                    val pVal = newPaid.toDoubleOrNull()
+                                    val aVal = amountText.toDoubleOrNull()
+                                    if (pVal != null && aVal != null && aVal > 0) {
+                                        val calculated = (aVal - pVal).coerceAtLeast(0.0)
+                                        dueText = if (calculated > 0) formatDecimal(calculated) else "0"
+                                    }
+                                },
                                 label = { Text("${if (language == AppLanguage.BANGLA) "জমা / পরিশোধ" else "Paid Amount"} ($currency)") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 singleLine = true,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("paid_amount_input"),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = RedAccent,
                                     unfocusedBorderColor = DarkBorder,
@@ -1511,17 +1582,51 @@ fun AddEditTransactionDialog(
                             Spacer(modifier = Modifier.width(6.dp))
 
                             OutlinedButton(
-                                onClick = { paidText = amountText },
+                                onClick = {
+                                    paidText = amountText
+                                    dueText = "0"
+                                },
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Text(if (language == AppLanguage.BANGLA) "পুরো পরিশোধ" else "Full", fontSize = 12.sp)
                             }
                         }
+                    }
 
-                        if (calculatedDue > 0) {
+                    item {
+                        OutlinedTextField(
+                            value = dueText,
+                            onValueChange = { newDue ->
+                                dueText = newDue
+                            },
+                            label = {
+                                Text(
+                                    "${if (type == "SALE") {
+                                        if (language == AppLanguage.BANGLA) "কাস্টমার বাকি (Customer Due)" else "Customer Due"
+                                    } else {
+                                        if (language == AppLanguage.BANGLA) "মহাজন দেনা বাকি" else "Supplier Due"
+                                    }} ($currency)"
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(if (type == "SALE") "customer_due_input" else "supplier_due_input"),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = RedAccent,
+                                unfocusedBorderColor = DarkBorder,
+                                focusedContainerColor = DarkSurfaceVariant,
+                                unfocusedContainerColor = DarkSurfaceVariant
+                            )
+                        )
+
+                        val effectiveDue = dueText.toDoubleOrNull()
+                            ?: (if (paidText.isNotBlank()) (amountVal - paidVal).coerceAtLeast(0.0) else 0.0)
+                        if (effectiveDue > 0) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${if (language == AppLanguage.BANGLA) "বাকি থাকবে:" else "Pending Due:"} $currency ${formatMoney(calculatedDue)}",
+                                text = "${if (language == AppLanguage.BANGLA) "বাকি থাকবে:" else "Pending Due:"} $currency ${formatMoney(effectiveDue)}",
                                 color = RedAccent,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
@@ -1735,7 +1840,17 @@ fun AddEditTransactionDialog(
                                 else -> "Expense"
                             }
                         }
-                        val finalPaid = if (type == "EXPENSE") amountVal else paidVal
+                        val finalPaid = if (type == "EXPENSE") {
+                            amountVal
+                        } else {
+                            val pVal = paidText.toDoubleOrNull()
+                            val dVal = dueText.toDoubleOrNull()
+                            when {
+                                pVal != null -> pVal
+                                dVal != null -> (amountVal - dVal).coerceAtLeast(0.0)
+                                else -> amountVal
+                            }
+                        }
                         val q = quantityText.toDoubleOrNull() ?: 0.0
                         val up = unitPriceText.toDoubleOrNull() ?: 0.0
 
@@ -1767,6 +1882,14 @@ fun AddEditTransactionDialog(
         },
         containerColor = DarkSurfaceElevated
     )
+}
+
+fun formatDecimal(value: Double): String {
+    return if (value % 1.0 == 0.0) {
+        value.toLong().toString()
+    } else {
+        String.format(Locale.US, "%.2f", value)
+    }
 }
 
 fun formatMoney(amount: Double): String {

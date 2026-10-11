@@ -53,6 +53,19 @@ class BusinessRepository(context: Context) {
 
     suspend fun triggerSync(isManual: Boolean = true): SyncResult = syncManager.triggerSync(isManual)
 
+    suspend fun backupAllToCloud(): SyncResult = syncManager.backupAllToCloud()
+
+    suspend fun downloadAndRestoreFromCloud(): com.example.data.business.sync.RestoreResult =
+        syncManager.downloadAndRestoreFromCloud()
+
+    suspend fun signInWithGoogle(activityContext: Context): com.example.data.business.sync.AuthOperationResult =
+        syncManager.signInWithGoogle(activityContext)
+
+    suspend fun signOut(activityContext: Context) = syncManager.signOut(activityContext)
+
+    suspend fun switchAccount(activityContext: Context): com.example.data.business.sync.AuthOperationResult =
+        syncManager.switchAccount(activityContext)
+
     private suspend fun enqueueSync(
         businessId: Long,
         entityType: String,

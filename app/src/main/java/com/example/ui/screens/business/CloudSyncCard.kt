@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,16 +18,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,7 +59,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,11 +75,19 @@ fun CloudSyncCard(
     syncState: BusinessSyncState,
     lang: AppLanguage,
     onSyncNow: () -> Unit,
+    onBackupAll: () -> Unit = {},
+    onRestoreFromCloud: () -> Unit = {},
+    onSignInWithGoogle: () -> Unit = {},
+    onSignOut: () -> Unit = {},
+    onSwitchAccount: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var showDialog by FindRememberedDialogState()
+    var showDialog by remember { mutableStateOf(false) }
 
     val isSyncing = syncState.status == SyncStatusEnum.SYNCING
+    val isRestoring = syncState.isRestoring || syncState.status == SyncStatusEnum.RESTORING
+    val isAuthBusy = syncState.authOperationInProgress
+    val isUserSignedIn = syncState.report.currentUserUid != null
 
     val (statusColor, statusIcon, statusLabel) = when (syncState.status) {
         SyncStatusEnum.SUCCESS -> Triple(
@@ -85,6 +99,11 @@ fun CloudSyncCard(
             Color(0xFF3B82F6),
             Icons.Default.CloudSync,
             Strings.bizStatusSyncing(lang)
+        )
+        SyncStatusEnum.RESTORING -> Triple(
+            Color(0xFF8B5CF6),
+            Icons.Default.CloudDownload,
+            "Restoring Cloud Data"
         )
         SyncStatusEnum.OFFLINE_QUEUED -> Triple(
             Color(0xFFF59E0B),
@@ -104,7 +123,7 @@ fun CloudSyncCard(
         SyncStatusEnum.ERROR -> Triple(
             Color(0xFFEF4444),
             Icons.Default.Warning,
-            "Error (${syncState.pendingCount} queued)"
+            "Notice (${syncState.pendingCount} queued)"
         )
         SyncStatusEnum.IDLE -> Triple(
             if (syncState.lastSyncTimestamp > 0) Color(0xFF10B981) else Color(0xFF94A3B8),
@@ -131,120 +150,228 @@ fun CloudSyncCard(
             brush = androidx.compose.ui.graphics.SolidColor(statusColor.copy(alpha = 0.35f))
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
+            // Main Top Bar: Status, Account badge, and Action buttons
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(statusColor.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    if (isSyncing) {
-                        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
-                        val angle by infiniteTransition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1200, easing = LinearEasing)
-                            ),
-                            label = "spin"
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = "Syncing",
-                            tint = statusColor,
-                            modifier = Modifier
-                                .size(22.dp)
-                                .rotate(angle)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = statusIcon,
-                            contentDescription = statusLabel,
-                            tint = statusColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = Strings.bizCloudSync(lang),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFE2E8F0)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(statusColor.copy(alpha = 0.15f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = statusLabel,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = statusColor
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(statusColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSyncing || isRestoring || isAuthBusy) {
+                            val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+                            val angle by infiniteTransition.animateFloat(
+                                initialValue = 0f,
+                                targetValue = 360f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(1200, easing = LinearEasing)
+                                ),
+                                label = "spin"
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = "Operating",
+                                tint = statusColor,
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .rotate(angle)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = statusIcon,
+                                contentDescription = statusLabel,
+                                tint = statusColor,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                    Text(
-                        text = "${Strings.bizLastSynced(lang)} $formattedLastSync",
-                        fontSize = 11.sp,
-                        color = Color(0xFF94A3B8)
-                    )
-                }
-            }
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = Strings.bizCloudSync(lang),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFE2E8F0)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(statusColor.copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = statusLabel,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = statusColor
+                                )
+                            }
+                        }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onSyncNow,
-                    enabled = !isSyncing,
-                    modifier = Modifier.testTag("sync_now_button")
-                ) {
-                    if (isSyncing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color(0xFF38BDF8),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = Strings.bizSyncNow(lang),
-                            tint = Color(0xFF38BDF8)
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = if (isUserSignedIn) {
+                                syncState.report.currentUserEmail ?: "Connected"
+                            } else {
+                                "${Strings.bizLastSynced(lang)} $formattedLastSync"
+                            },
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8)
                         )
                     }
                 }
 
-                IconButton(
-                    onClick = { showDialog = true },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Diagnostics",
-                        tint = Color(0xFF64748B),
-                        modifier = Modifier.size(18.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onSyncNow,
+                        enabled = !isSyncing && !isRestoring,
+                        modifier = Modifier.testTag("sync_now_button")
+                    ) {
+                        if (isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color(0xFF38BDF8),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = Strings.bizSyncNow(lang),
+                                tint = Color(0xFF38BDF8)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Diagnostics",
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
+            }
+
+            // Optional Quick Actions & Auth Banner
+            if (!isUserSignedIn) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF1E2530))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = Color(0xFFF97316),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Offline Mode Active (Sign-In Optional)",
+                            fontSize = 11.sp,
+                            color = Color(0xFFCBD5E1)
+                        )
+                    }
+                    Button(
+                        onClick = onSignInWithGoogle,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .height(28.dp)
+                            .testTag("google_sign_in_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Google Sign-In", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onBackupAll,
+                        enabled = !isSyncing && !isRestoring,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(30.dp)
+                            .testTag("backup_all_button"),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Backup All", fontSize = 10.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = onRestoreFromCloud,
+                        enabled = !isSyncing && !isRestoring,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(30.dp)
+                            .testTag("restore_cloud_button"),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        if (isRestoring) {
+                            CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)
+                        } else {
+                            Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(13.dp))
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = if (isRestoring) "Restoring..." else "Restore", fontSize = 10.sp)
+                    }
+                }
+            }
+
+            // Status feedback banner if lastActionMessage or error exists
+            if (!syncState.lastActionMessage.isNullOrBlank() || !syncState.errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val isErr = !syncState.errorMessage.isNullOrBlank()
+                val textMsg = syncState.errorMessage ?: syncState.lastActionMessage ?: ""
+                Text(
+                    text = textMsg,
+                    fontSize = 10.sp,
+                    color = if (isErr) Color(0xFFF87171) else Color(0xFF34D399)
+                )
             }
         }
     }
@@ -254,24 +381,31 @@ fun CloudSyncCard(
             syncState = syncState,
             lang = lang,
             onDismiss = { showDialog = false },
-            onSyncNow = {
-                onSyncNow()
-            }
+            onSyncNow = onSyncNow,
+            onBackupAll = onBackupAll,
+            onRestoreFromCloud = onRestoreFromCloud,
+            onSignInWithGoogle = onSignInWithGoogle,
+            onSignOut = onSignOut,
+            onSwitchAccount = onSwitchAccount
         )
     }
 }
-
-@Composable
-private fun FindRememberedDialogState() = remember { mutableStateOf(false) }
 
 @Composable
 fun SyncDiagnosticsDialog(
     syncState: BusinessSyncState,
     lang: AppLanguage,
     onDismiss: () -> Unit,
-    onSyncNow: () -> Unit
+    onSyncNow: () -> Unit,
+    onBackupAll: () -> Unit,
+    onRestoreFromCloud: () -> Unit,
+    onSignInWithGoogle: () -> Unit,
+    onSignOut: () -> Unit,
+    onSwitchAccount: () -> Unit
 ) {
     val report = syncState.report
+    val isUserSignedIn = report.currentUserUid != null
+    val isBusy = syncState.status == SyncStatusEnum.SYNCING || syncState.isRestoring
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -293,8 +427,12 @@ fun SyncDiagnosticsDialog(
             }
         },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Section 1: Offline Protection
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Section 1: Offline Protection Guarantee
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -311,7 +449,7 @@ fun SyncDiagnosticsDialog(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "All sales, purchases, customers, and stock are saved securely in your local on-device SQLite database. No data will ever be lost without internet.",
+                            text = "All sales, purchases, customers, suppliers, and stock are saved securely in your local on-device SQLite database. No data will ever be lost or blocked without internet or sign-in.",
                             fontSize = 11.sp,
                             color = Color(0xFFA7F3D0)
                         )
@@ -320,7 +458,87 @@ fun SyncDiagnosticsDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Section 2: Sync Queue Status
+                // Section 2: Account Session & Isolation
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF1E2530))
+                        .padding(10.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Account Status:",
+                                fontSize = 11.sp,
+                                color = Color(0xFF94A3B8)
+                            )
+                            Text(
+                                text = if (isUserSignedIn) "✅ Signed In" else "👤 Offline / Local",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isUserSignedIn) Color(0xFF10B981) else Color(0xFFF59E0B)
+                            )
+                        }
+                        if (isUserSignedIn) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Email: ${report.currentUserEmail ?: "Google Account"}",
+                                fontSize = 11.sp,
+                                color = Color(0xFFE2E8F0)
+                            )
+                            Text(
+                                text = "UID: ${report.currentUserUid?.take(12)}... (Data Isolated)",
+                                fontSize = 10.sp,
+                                color = Color(0xFF64748B)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = onSwitchAccount,
+                                    modifier = Modifier.weight(1f).height(30.dp),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.SwitchAccount, contentDescription = null, modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "Switch Account", fontSize = 10.sp)
+                                }
+                                OutlinedButton(
+                                    onClick = onSignOut,
+                                    modifier = Modifier.weight(1f).height(30.dp),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "Sign Out", fontSize = 10.sp)
+                                }
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Button(
+                                onClick = onSignInWithGoogle,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                                modifier = Modifier.fillMaxWidth().height(32.dp).testTag("google_sign_in_button"),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = "Sign in with Google (Optional)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Section 3: Sync Queue Status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -338,9 +556,48 @@ fun SyncDiagnosticsDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Section 3: Diagnostic Checklist
+                // Section 4: Cloud Operations
+                Text(
+                    text = "Cloud Actions:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFCBD5E1)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onBackupAll,
+                        enabled = !isBusy && isUserSignedIn,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0D9488)),
+                        modifier = Modifier.weight(1f).height(32.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Backup All", fontSize = 10.sp)
+                    }
+
+                    Button(
+                        onClick = onRestoreFromCloud,
+                        enabled = !isBusy && isUserSignedIn,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                        modifier = Modifier.weight(1f).height(32.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Restore Cloud", fontSize = 10.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Section 5: Diagnostic Checklist
                 Text(
                     text = "Firebase Cloud Diagnostics:",
                     fontSize = 12.sp,
@@ -352,22 +609,22 @@ fun SyncDiagnosticsDialog(
                 DiagnosticItem(
                     label = "google-services.json Config",
                     isPassed = report.hasGoogleServicesConfig,
-                    missingHint = "Not present in project"
+                    missingHint = "Place in /app directory"
                 )
                 DiagnosticItem(
                     label = "Firebase App Initialized",
                     isPassed = report.isFirebaseInitialized,
-                    missingHint = "Requires backend provisioning"
+                    missingHint = "Awaiting config file"
                 )
                 DiagnosticItem(
                     label = "Cloud Firestore DB",
                     isPassed = report.isFirestoreAvailable,
-                    missingHint = "Firestore not connected"
+                    missingHint = "Ready once configured"
                 )
                 DiagnosticItem(
                     label = "Firebase Auth / Sign-In",
-                    isPassed = report.currentUserUid != null,
-                    missingHint = if (report.isAuthAvailable) "Sign-in required" else "Auth not ready"
+                    isPassed = isUserSignedIn,
+                    missingHint = if (report.isAuthAvailable) "Sign-in optional" else "Auth client ready"
                 )
 
                 if (report.missingRequirements.isNotEmpty()) {
@@ -381,7 +638,7 @@ fun SyncDiagnosticsDialog(
                     ) {
                         Column {
                             Text(
-                                text = "⚠️ Missing Setup Requirements:",
+                                text = "⚠️ Remaining Setup Requirements:",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFBBF24)
@@ -396,6 +653,15 @@ fun SyncDiagnosticsDialog(
                             }
                         }
                     }
+                }
+
+                if (!syncState.restoreSummary.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Restore status: ${syncState.restoreSummary}",
+                        fontSize = 11.sp,
+                        color = Color(0xFF34D399)
+                    )
                 }
 
                 if (!syncState.errorMessage.isNullOrBlank()) {

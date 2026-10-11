@@ -78,7 +78,6 @@ import com.example.data.business.BusinessTransaction
 import com.example.data.business.Customer
 import com.example.data.business.ProductItem
 import com.example.data.business.Supplier
-import com.example.data.business.report.BusinessReportCsvExporter
 import com.example.data.business.report.BusinessReportFileManager
 import com.example.data.business.report.BusinessReportGenerator
 import com.example.data.business.report.BusinessReportJpgExporter
@@ -341,7 +340,7 @@ fun ReportsSection(
             }
         }
 
-        // --- 2. Export Actions Buttons (PDF & CSV) ---
+        // --- 2. Export Actions Buttons (PDF & JPG) ---
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(

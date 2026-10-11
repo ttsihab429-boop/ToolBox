@@ -14,6 +14,9 @@ interface BusinessDao {
     @Query("SELECT * FROM business_profiles ORDER BY id ASC")
     fun getAllBusinesses(): Flow<List<BusinessProfile>>
 
+    @Query("SELECT * FROM business_profiles ORDER BY id ASC")
+    suspend fun getAllBusinessesList(): List<BusinessProfile>
+
     @Query("SELECT * FROM business_profiles WHERE id = :id LIMIT 1")
     suspend fun getBusinessById(id: Long): BusinessProfile?
 
@@ -32,6 +35,9 @@ interface BusinessDao {
     // --- Transactions ---
     @Query("SELECT * FROM business_transactions WHERE businessId = :businessId ORDER BY timestamp DESC")
     fun getTransactions(businessId: Long): Flow<List<BusinessTransaction>>
+
+    @Query("SELECT * FROM business_transactions WHERE businessId = :businessId ORDER BY timestamp DESC")
+    suspend fun getTransactionsList(businessId: Long): List<BusinessTransaction>
 
     @Query("SELECT * FROM business_transactions WHERE id = :id LIMIT 1")
     suspend fun getTransactionById(id: Long): BusinessTransaction?
@@ -67,6 +73,9 @@ interface BusinessDao {
     @Query("SELECT * FROM business_customers WHERE businessId = :businessId ORDER BY name ASC")
     fun getAllCustomers(businessId: Long): Flow<List<Customer>>
 
+    @Query("SELECT * FROM business_customers WHERE businessId = :businessId ORDER BY name ASC")
+    suspend fun getAllCustomersList(businessId: Long): List<Customer>
+
     @Query("SELECT * FROM business_customers WHERE id = :id LIMIT 1")
     suspend fun getCustomerById(id: Long): Customer?
 
@@ -89,6 +98,9 @@ interface BusinessDao {
     @Query("SELECT * FROM business_suppliers WHERE businessId = :businessId ORDER BY name ASC")
     fun getAllSuppliers(businessId: Long): Flow<List<Supplier>>
 
+    @Query("SELECT * FROM business_suppliers WHERE businessId = :businessId ORDER BY name ASC")
+    suspend fun getAllSuppliersList(businessId: Long): List<Supplier>
+
     @Query("SELECT * FROM business_suppliers WHERE id = :id LIMIT 1")
     suspend fun getSupplierById(id: Long): Supplier?
 
@@ -110,6 +122,9 @@ interface BusinessDao {
     // --- Products (Inventory) ---
     @Query("SELECT * FROM business_products WHERE businessId = :businessId ORDER BY name ASC")
     fun getAllProducts(businessId: Long): Flow<List<ProductItem>>
+
+    @Query("SELECT * FROM business_products WHERE businessId = :businessId ORDER BY name ASC")
+    suspend fun getAllProductsList(businessId: Long): List<ProductItem>
 
     @Query("SELECT * FROM business_products WHERE id = :id LIMIT 1")
     suspend fun getProductById(id: Long): ProductItem?

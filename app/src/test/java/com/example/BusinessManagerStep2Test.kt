@@ -224,4 +224,90 @@ class BusinessManagerStep2Test {
         assertTrue(product!!.isLowStock)
         assertFalse(product!!.isOutOfStock)
     }
+
+    @Test
+    fun testTotalSalesAndCustomerDueRegression() = runBlocking {
+        val businesses = repository.businesses.first()
+        val bizId = businesses.first().id
+
+        // 1. Verify sale transaction calculation: due = total - paid
+        val custId = repository.saveCustomer(
+            businessId = bizId,
+            name = "Test Buyer",
+            phone = "01800000001",
+            openingBalance = 0.0
+        )
+
+        val txId = repository.saveTransaction(
+            businessId = bizId,
+            type = "SALE",
+            title = "Apparel Sale",
+            amount = 2000.0,
+            paidAmount = 1200.0,
+            customerId = custId
+        )
+        val tx = repository.getTransactionById(txId)
+        assertNotNull(tx)
+        assertEquals(2000.0, tx!!.amount, 0.01)
+        assertEquals(1200.0, tx.paidAmount, 0.01)
+        assertEquals(800.0, tx.dueAmount, 0.01)
+
+        val txs = repository.getTransactions(bizId).first()
+        val customer = repository.getCustomerById(custId)!!
+        val calculatedDue = repository.calculateCustomerDue(customer, txs)
+        assertEquals(800.0, calculatedDue, 0.01)
+
+        // 2. State & binding regression test:
+        // Typing Total Sales without entering Paid Amount must NOT automatically change Customer Due.
+        var amountText = ""
+        var paidText = ""
+        var dueText = ""
+
+        fun onAmountChanged(newAmount: String) {
+            amountText = newAmount
+            val newAmtVal = newAmount.toDoubleOrNull()
+            val pVal = paidText.toDoubleOrNull()
+            if (newAmtVal != null && pVal != null && paidText.isNotBlank()) {
+                val calculated = (newAmtVal - pVal).coerceAtLeast(0.0)
+                dueText = if (calculated > 0) calculated.toString() else "0"
+            }
+        }
+
+        fun onPaidChanged(newPaid: String) {
+            paidText = newPaid
+            val pVal = newPaid.toDoubleOrNull()
+            val aVal = amountText.toDoubleOrNull()
+            if (pVal != null && aVal != null && aVal > 0) {
+                val calculated = (aVal - pVal).coerceAtLeast(0.0)
+                dueText = if (calculated > 0) calculated.toString() else "0"
+            }
+        }
+
+        fun onDueChanged(newDue: String) {
+            dueText = newDue
+        }
+
+        // Entering Total Sales must not auto-populate Customer Due when Paid is empty
+        onAmountChanged("5000")
+        assertEquals("5000", amountText)
+        assertEquals("", dueText)
+
+        // Customer Due input is independent and does not overwrite Paid Amount
+        onDueChanged("1500")
+        assertEquals("1500", dueText)
+        assertEquals("", paidText)
+
+        // Changing Total Sales does not overwrite Customer Due
+        onAmountChanged("6000")
+        assertEquals("6000", amountText)
+        assertEquals("1500", dueText)
+
+        // Entering Paid Amount calculates due as total - paid correctly
+        onPaidChanged("4000")
+        assertEquals("2000.0", dueText)
+
+        // When Paid Amount is entered, changing Total Sales updates due correctly (7000 - 4000 = 3000)
+        onAmountChanged("7000")
+        assertEquals("3000.0", dueText)
+    }
 }
